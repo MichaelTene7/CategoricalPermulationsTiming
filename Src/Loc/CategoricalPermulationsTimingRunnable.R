@@ -1,7 +1,7 @@
 library(RERconverge)
-phenotypeVectors = readRDS("CategoricalPermuationsTimingPhenotypes.rds")
-mainTrees = readRDS("CategoricalPermulationsTimingTrees.rds")
-premadeTimes = readRDS("CategoricalPermulationsTimes.rds")
+phenotypeVectors = readRDS("Data/CategoricalPermuationsTimingPhenotypes.rds")
+mainTrees = readRDS("Data/CategoricalPermulationsTimingTrees.rds")
+premadeTimes = readRDS("Data/CategoricalPermulationsTimes.rds")
 source("Src/Reu/cmdArgImport.R")
 
 # --- Example code used to generate permualtions times ---
