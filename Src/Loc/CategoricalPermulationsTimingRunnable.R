@@ -1,3 +1,4 @@
+.libPaths("/share/ceph/wym219group/shared/libraries/R4")
 library(RERconverge)
 phenotypeVectors = readRDS("Data/CategoricalPermuationsTimingPhenotypes.rds")
 mainTrees = readRDS("Data/CategoricalPermulationsTimingTrees.rds")
