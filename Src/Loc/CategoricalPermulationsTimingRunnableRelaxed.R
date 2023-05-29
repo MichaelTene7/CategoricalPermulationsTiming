@@ -7,6 +7,7 @@ source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/RelaxedRejectionPermFuncs.R")
 
 # -- Argument IMports ---
+args = commandArgs(trailingOnly = TRUE)
 relaxation = 0 
 
 #Rate Model
