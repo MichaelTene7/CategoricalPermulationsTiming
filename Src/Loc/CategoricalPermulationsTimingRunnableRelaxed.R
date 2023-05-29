@@ -19,6 +19,7 @@ if(!is.na(cmdArgImport('m'))){
 #Relaxation Level
 if(!is.na(cmdArgImport('r'))){
   relaxation = cmdArgImport('r')
+  relaxation = as.numeric(relaxation)
 }else{
   message("Relaxation level not specified, using 0")
 }
