@@ -1,5 +1,7 @@
 # Functions for Permulations for Categorical Traits
 
+# Include fixes in improveTree that NEED TO GET UPDATED ON GITHUB!!!
+
 # internal function that generates a set of N null tips with the number of species in each category matching the actual phenotype data
 getNullTips <- function(tree, Q, N, intlabels, root_prob = "stationary", percent_relax) {
   
@@ -23,7 +25,7 @@ getNullTips <- function(tree, Q, N, intlabels, root_prob = "stationary", percent
     
     # IF THE TIP COUNTS MATCH THE TIP COUNTS IN THE REAL DATA, ADD TO THE LIST
     # sum(true_counts == sim_counts) == length(true_counts)
-    if(sum(abs(sim_counts - true_counts) <= true_counts*percent_relax) < length(true_counts)) {
+    if(sum(abs(sim_counts - true_counts) <= true_counts*percent_relax) == length(true_counts)) {
       cnt = cnt + 1
       
       print(cnt)
@@ -90,16 +92,6 @@ improveTree <- function(tree, Q, P, nodes, tips, T0, Nk, cycles, alpha) {
   
   # get ancliks and max_states
   ancliks = getAncLiks(tree, tips, Q)
-  max_states = getStatesAtNodes(ancliks)
-  
-  # calculate tree likelihoods
-  # states = c(tips, max_states)
-  # max_lik = 1 
-  # for(i in 1:nrow(tree$edge)){
-  #   a = states[tree$edge[i,1]]
-  #   d = states[tree$edge[i,2]]
-  #   max_lik = max_lik * P[[i]][a, d]
-  # }
   
   states = c(tips, nodes)
   curr_lik = 1
