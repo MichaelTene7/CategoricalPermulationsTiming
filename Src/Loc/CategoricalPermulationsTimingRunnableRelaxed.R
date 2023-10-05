@@ -5,6 +5,7 @@ mainTrees = readRDS("Data/CategoricalPermulationsTimingTrees.rds")
 premadeTimes = readRDS("Data/CategoricalPermulationsTimes.rds")
 source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/RelaxedRejectionPermFuncs.R")
+args = c("m=cstm")
 
 # -- Argument IMports ---
 args = commandArgs(trailingOnly = TRUE)
@@ -27,7 +28,7 @@ if(!is.na(cmdArgImport('r'))){
   message("Relaxation level not specified, using 0")
 }
 
-fileNameIdentifier = paste(rateModel, "Relax", relaxation, sep="")
+fileNameIdentifier = paste(rateModel[1], "Relax", relaxation, sep="")
 "Output/CategoricalPermuationsTimingPhenotypesER.rds"
 phenotypeOutFilename = paste("Output/CategoricalPermulationsTimingPhenotypes", fileNameIdentifier, ".rds", sep="")
 timesOutFilename = paste("Output/CategoricalPermulationsTimes", fileNameIdentifier, ".rds", sep="")
