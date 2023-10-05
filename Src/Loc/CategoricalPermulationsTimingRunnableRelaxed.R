@@ -9,10 +9,12 @@ source("Src/Reu/RelaxedRejectionPermFuncs.R")
 # -- Argument IMports ---
 args = commandArgs(trailingOnly = TRUE)
 relaxation = 0 
+customRateMatrix = matrix(c(1,2,3,2,4,5,6,7,8),3)
 
 #Rate Model
 if(!is.na(cmdArgImport('m'))){
   rateModel = cmdArgImport('m')
+  if(rateModel == "cstm"){rateModel = customRateMatrix}
 }else{
   stop("Specify rate model")
 }
