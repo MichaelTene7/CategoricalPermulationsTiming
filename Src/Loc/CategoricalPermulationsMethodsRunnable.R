@@ -86,24 +86,37 @@ testPermTime = function(phenotypeVec, phenCode){
 }
 
 
-timeTrials = function(phenSet, outMat, numTrials = 5, subs = NULL){
+timeTrials = function(phenSet, outMat, numTrials = 5, subs = NULL, subOnly = F, phenOnly = F){
+  skipRun = F
   for(i in 1:ncol(phenSet)){
     phenCode = colnames(phenSet)[i]
+    message(phenCode)
     if(!is.null(subs)){
       for( j in 1:length(subs)){
         substitutePhenotypes = subs[[j]]
         substitutePhenotypesCode = substring(substitutePhenotypes, 1, 1)
-        message(paste("replacing", substitutePhenotypesCode[1], "with", substitutePhenotypesCode[2]))
+        if(subOnly){
+          if(!length(grep(substitutePhenotypesCode[1], phenCode) == 0))
+            skipRun = T
+        }
+        #message(paste("replacing", substitutePhenotypesCode[1], "with", substitutePhenotypesCode[2]))
         phenCode = gsub(substitutePhenotypesCode[1], "", phenCode)
         if(!length(grep(substitutePhenotypesCode[2], phenCode) == 0)){
           phenCode = paste(phenCode, substitutePhenotypesCode[2], sep="")
         }
       }
+      if(skipRun){
+        skipRun = F
+        message("Only running on subs, no subs found, skipping")
+        next()
+      }
     }
     phenotypesUsed = phenSet[,1]
     phenVec = makePhenotypeVector(phenotypesUsed, phenCode, substitutions = subs)
-    for(k in 1:numTrials){
-      testPermTime(phenVec, paste(phenCode, "_", k, sep=""))
+    if(!phenOnly){
+      for(k in 1:numTrials){
+        testPermTime(phenVec, paste(phenCode, "_", k, sep=""))
+      }
     }
     message(paste("completed", phenCode, ";", i, "of", ncol(phenSet)))
   }
@@ -157,6 +170,7 @@ colnames(combinations6Phen) = comb6PhenCodes
 # - Meativore - 
 meativoreSubs = list(c("Piscivore", "Meativore"), c("Carnivore", "Meativore"))
 
+phen3meatCols = which(grep("C", colnames(combinations3Phen)) %in% grep("P", colnames(combinations3Phen)))
 phen4meatCols = which(grep("C", colnames(combinations4Phen)) %in% grep("P", colnames(combinations4Phen)))
 phen5meatCols = which(grep("C", colnames(combinations5Phen)) %in% grep("P", colnames(combinations5Phen)))
 phen6meatCols = which(grep("C", colnames(combinations6Phen)) %in% grep("P", colnames(combinations6Phen)))
@@ -165,6 +179,7 @@ phen6meatCols = which(grep("C", colnames(combinations6Phen)) %in% grep("P", coln
 # - Generalivore - 
 generalivoreSubs = list(c("Omnivore", "Generalivore"), c("Anthropivore", "Generalivore"))
 
+phen3GeneralCols = which(grep("O", colnames(combinations3Phen)) %in% grep("A", colnames(combinations3Phen)))
 phen4GeneralCols = which(grep("O", colnames(combinations4Phen)) %in% grep("A", colnames(combinations4Phen)))
 phen5GeneralCols = which(grep("O", colnames(combinations5Phen)) %in% grep("A", colnames(combinations5Phen)))
 phen6GeneralCols = which(grep("O", colnames(combinations6Phen)) %in% grep("A", colnames(combinations6Phen)))
@@ -176,15 +191,19 @@ bothSubs = append(meativoreSubs, generalivoreSubs)
 
 
 # ----- Run the permulations to time ----
-
 #outputs are saved after each number of phenotypes, to allow for data collection even if the higher phenotype numbers cause the script to time out
 
+#clear the outputs
+phenotypeVectorsOut = list()
+timesOut = list()
+
+# - Run timing Tests - 
 addBreakToOutputs("2Phenotypes")
 phen2Times = data.frame()
 timeTrials(combinations2Phen, phen2Times)
-timeTrials(combinations3Phen, phen2Times, subs = meativoreSubs)
-timeTrials(combinations3Phen, phen2Times, subs = generalivoreSubs)
-timeTrials(combinations4Phen, phen2Times, subs = bothSubs)
+timeTrials(combinations3Phen, phen2Times, subs = meativoreSubs, subOnly = T)
+timeTrials(combinations3Phen, phen2Times, subs = generalivoreSubs, subOnly = T)
+timeTrials(combinations4Phen, phen2Times, subs = bothSubs, subOnly = T)
 
 saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
 saveRDS(timesOut, timesOutFilename)
@@ -193,9 +212,9 @@ saveRDS(timesOut, timesOutFilename)
 addBreakToOutputs("3Phenotypes")
 phen3Times = data.frame()
 timeTrials(combinations3Phen, phen3Times)
-timeTrials(combinations4Phen, phen3Times, subs = meativoreSubs)
-timeTrials(combinations4Phen, phen3Times, subs = generalivoreSubs)
-timeTrials(combinations5Phen, phen3Times, subs = bothSubs)
+timeTrials(combinations4Phen, phen3Times, subs = meativoreSubs, subOnly = T)
+timeTrials(combinations4Phen, phen3Times, subs = generalivoreSubs, subOnly = T)
+timeTrials(combinations5Phen, phen3Times, subs = bothSubs, subOnly = T)
 
 saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
 saveRDS(timesOut, timesOutFilename)
@@ -203,9 +222,9 @@ saveRDS(timesOut, timesOutFilename)
 addBreakToOutputs("4Phenotypes")
 phen4Times = data.frame()
 timeTrials(combinations4Phen, phen4Times)
-timeTrials(combinations5Phen, phen4Times, subs = meativoreSubs)
-timeTrials(combinations5Phen, phen4Times, subs = generalivoreSubs)
-timeTrials(combinations6Phen, phen4Times, subs = bothSubs)
+timeTrials(combinations5Phen, phen4Times, subs = meativoreSubs, subOnly = T)
+timeTrials(combinations5Phen, phen4Times, subs = generalivoreSubs, subOnly = T)
+timeTrials(combinations6Phen, phen4Times, subs = bothSubs, subOnly = T)
 
 saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
 saveRDS(timesOut, timesOutFilename)
@@ -213,8 +232,8 @@ saveRDS(timesOut, timesOutFilename)
 addBreakToOutputs("5Phenotypes")
 phen5Times = data.frame()
 timeTrials(combinations5Phen, phen5Times)
-timeTrials(combinations6Phen, phen5Times, subs = meativoreSubs)
-timeTrials(combinations6Phen, phen5Times, subs = generalivoreSubs)
+timeTrials(combinations6Phen, phen5Times, subs = meativoreSubs, subOnly = T)
+timeTrials(combinations6Phen, phen5Times, subs = generalivoreSubs, subOnly = T)
 
 saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
 saveRDS(timesOut, timesOutFilename)
