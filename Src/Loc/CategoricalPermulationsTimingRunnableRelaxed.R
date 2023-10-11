@@ -5,7 +5,7 @@ mainTrees = readRDS("Data/CategoricalPermulationsTimingTrees.rds")
 premadeTimes = readRDS("Data/CategoricalPermulationsTimes.rds")
 source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/RelaxedRejectionPermFuncs.R")
-args = c("m=ARD")
+args = c("m=cstm", "r=20")
 
 # -- Argument IMports ---
 args = commandArgs(trailingOnly = TRUE)
