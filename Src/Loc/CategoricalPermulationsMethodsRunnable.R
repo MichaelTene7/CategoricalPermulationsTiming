@@ -177,12 +177,17 @@ bothSubs = append(meativoreSubs, generalivoreSubs)
 
 # ----- Run the permulations to time ----
 
+#outputs are saved after each number of phenotypes, to allow for data collection even if the higher phenotype numbers cause the script to time out
+
 addBreakToOutputs("2Phenotypes")
 phen2Times = data.frame()
 timeTrials(combinations2Phen, phen2Times)
 timeTrials(combinations3Phen, phen2Times, subs = meativoreSubs)
 timeTrials(combinations3Phen, phen2Times, subs = generalivoreSubs)
 timeTrials(combinations4Phen, phen2Times, subs = bothSubs)
+
+saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+saveRDS(timesOut, timesOutFilename)
 
 
 addBreakToOutputs("3Phenotypes")
@@ -192,6 +197,9 @@ timeTrials(combinations4Phen, phen3Times, subs = meativoreSubs)
 timeTrials(combinations4Phen, phen3Times, subs = generalivoreSubs)
 timeTrials(combinations5Phen, phen3Times, subs = bothSubs)
 
+saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+saveRDS(timesOut, timesOutFilename)
+
 addBreakToOutputs("4Phenotypes")
 phen4Times = data.frame()
 timeTrials(combinations4Phen, phen4Times)
@@ -199,15 +207,24 @@ timeTrials(combinations5Phen, phen4Times, subs = meativoreSubs)
 timeTrials(combinations5Phen, phen4Times, subs = generalivoreSubs)
 timeTrials(combinations6Phen, phen4Times, subs = bothSubs)
 
+saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+saveRDS(timesOut, timesOutFilename)
+
 addBreakToOutputs("5Phenotypes")
 phen5Times = data.frame()
 timeTrials(combinations5Phen, phen5Times)
 timeTrials(combinations6Phen, phen5Times, subs = meativoreSubs)
 timeTrials(combinations6Phen, phen5Times, subs = generalivoreSubs)
 
+saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+saveRDS(timesOut, timesOutFilename)
+
 addBreakToOutputs("6Phenotypes")
 phen6Times = data.frame()
 timeTrials(combinations6Phen, phen6Times)
+
+saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+saveRDS(timesOut, timesOutFilename)
 
 
 # -- Save the outputs -- 
