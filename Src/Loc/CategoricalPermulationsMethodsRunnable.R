@@ -5,7 +5,7 @@ mainTrees = readRDS("Data/CategoricalPermulationsTimingHillerTrees.rds")
 #premadeTimes = readRDS("Data/CategoricalPermulationsTimes.rds")
 source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/RelaxedRejectionPermFuncs.R")
-args = c("m=SYM", "r=.20")
+args = c("m=ER", "r=.10")
 
 # -- Argument Imports ---
 args = commandArgs(trailingOnly = TRUE)
@@ -111,7 +111,7 @@ timeTrials = function(phenSet, outMat, numTrials = 5, subs = NULL, subOnly = F, 
         next()
       }
     }
-    phenotypesUsed = phenSet[,1]
+    phenotypesUsed = phenSet[,i]
     phenVec = makePhenotypeVector(phenotypesUsed, phenCode, substitutions = subs)
     if(!phenOnly){
       for(k in 1:numTrials){
@@ -132,6 +132,7 @@ addBreakToOutputs = function(breakName){
   names(timesOut)[position2] <<- breakName
 }
 
+{
 # ---- Generate the phenotype sets ----
 phenotypeOptions = unique(phenotypeVectorMain)
 phenotypeLetterOptions = substring(phenotypeOptions, 1, 1)
@@ -186,7 +187,7 @@ phen6GeneralCols = which(grep("O", colnames(combinations6Phen)) %in% grep("A", c
 
 # - Both - 
 bothSubs = append(meativoreSubs, generalivoreSubs)
-
+}
 
 
 
