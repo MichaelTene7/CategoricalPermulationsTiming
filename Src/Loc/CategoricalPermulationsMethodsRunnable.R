@@ -5,7 +5,7 @@ mainTrees = readRDS("Data/CategoricalPermulationsTimingHillerTrees.rds")
 #premadeTimes = readRDS("Data/CategoricalPermulationsTimes.rds")
 source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/RelaxedRejectionPermFuncs.R")
-args = c("m=ER", "r=.10")
+args = c("m=SYM", "r=.10")
 
 # -- Argument Imports ---
 args = commandArgs(trailingOnly = TRUE)
