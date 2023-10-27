@@ -5,7 +5,7 @@ mainTrees = readRDS("Data/CategoricalPermulationsTimingHillerTrees.rds")
 #premadeTimes = readRDS("Data/CategoricalPermulationsTimes.rds")
 source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/RelaxedRejectionPermFuncs.R")
-args = c("m=SYM", "r=.10")
+args = c("m=SYM", "r=.20")
 
 # -- Argument Imports ---
 args = commandArgs(trailingOnly = TRUE)
@@ -113,6 +113,7 @@ timeTrials = function(phenSet, outMat, numTrials = 5, subs = NULL, subOnly = F, 
     }
     phenotypesUsed = phenSet[,i]
     phenVec = makePhenotypeVector(phenotypesUsed, phenCode, substitutions = subs)
+    message(phenVec)
     if(!phenOnly){
       for(k in 1:numTrials){
         testPermTime(phenVec, paste(phenCode, "_", k, sep=""))
