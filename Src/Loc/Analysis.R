@@ -1,4 +1,5 @@
 library(ggplot2)
+library(cowplot)
 
 # -- read data times ---
 SYMTimes = readRDS("Output/Hiller/CategoricalPermulationsHillerTimesSYMRelax0.rds")
@@ -15,7 +16,7 @@ SYM20Phenotypes = readRDS("Output/Hiller/CategoricalPermulationsTimingHillerPhen
 inUsePhenotypes = SYM20Phenotypes
 inUseTimes = SYM20Times
 comboletters = c("M", "G")
-
+savingPrefix = "SYM20"
 
 
 
@@ -125,6 +126,12 @@ sixCategoryNoOutliers = subset(sixCategory, !phen %in% sixCategoryOutlier)
 
 allCategoryNoOutliers = rbind(twoCategoryNoOutliers, threeCategoryNoOutliers, fourCategoryNoOutliers, fiveCategoryNoOutliers, sixCategoryNoOutliers)
 
+outlieredDataList = list(allCategory, twoCategory, threeCategory, fourCategory, fiveCategory, sixCategory)
+noOutlierList = list(allCategoryNoOutliers, twoCategoryNoOutliers, threeCategoryNoOutliers, fourCategoryNoOutliers, fiveCategoryNoOutliers, sixCategoryNoOutliers)
+allDataList = list(outlieredDataList, noOutlierList)
+
+dataFilename = paste("Output/Analysis/RawData", savingPrefix, ".rds", sep="")
+save.rds(allDataList, dataFilename)
 
 
 # --- end organization of data ---
@@ -176,28 +183,36 @@ plotDataCompare = function(dataSet, xAxis = "speciesNum", yAxis = "time", colorV
     print(plot2)
   }else{
     message("Dataset has no outliers.")
+    return(plot1)
   }
 }
 # -- Species number effect --
-plotDataCompare(twoCategory)
-plotDataCompare(threeCategory)
-plotDataCompare(fourCategory)
-plotDataCompare(fiveCategory)
-plotDataCompare(sixCategory)
+cat2SpecNumPlot = plotDataCompare(twoCategory)
+cat3SpecNumPlot = plotDataCompare(threeCategory)
+cat4SpecNumPlot = plotDataCompare(fourCategory)
+cat5SpecNumPlot = plotDataCompare(fiveCategory)
+cat6SpecNumPlot = plotDataCompare(sixCategory)
+
+plot_grid(cat2SpecNumPlot, cat3SpecNumPlot, cat4SpecNumPlot, cat5SpecNumPlot, cat6SpecNumPlot, nrow =2, ncol = 3)
+
+pdfName = paste("Output/Analysis/SpeciesNumberPlots", savingPrefix, ".pdf", sep="")
+pdf(file = pdfName, height = 10, width = 16)
+plot_grid(cat2SpecNumPlot, cat3SpecNumPlot, cat4SpecNumPlot, cat5SpecNumPlot, cat6SpecNumPlot, nrow =2, ncol = 3)
+dev.off()
 
 
-
+# -- Category number effect --
 CompareCategoryMeans= c(mean(twoCategory$time), mean(threeCategory$time), mean(fourCategory$time), mean(fiveCategory$time), mean(sixCategory$time))
 CompareCatgeorySds = c(sd(twoCategory$time), sd(threeCategory$time), sd(fourCategory$time), sd(fiveCategory$time), sd(sixCategory$time))
 compareCategories = data.frame(CompareCategoryMeans, CompareCatgeorySds)
-colnames(compareCategories) = c("Means", "SDs")
+colnames(compareCategories) = c("Mean", "SD")
 rownames(compareCategories) = c("twoCategory", "threeCategory", "fourCategory", "fiveCategory", "sixCategory")
 
-compareCategories$noOutlierMeans = c(mean(twoCategoryNoOutliers$time), mean(threeCategoryNoOutliers$time), mean(fourCategoryNoOutliers$time), mean(fiveCategoryNoOutliers$time), mean(sixCategoryNoOutliers$time))
-compareCategories$noOutlierSDs = c(sd(twoCategoryNoOutliers$time), sd(threeCategoryNoOutliers$time), sd(fourCategoryNoOutliers$time), sd(fiveCategoryNoOutliers$time), sd(sixCategoryNoOutliers$time))
+compareCategories$noOutlierMean = c(mean(twoCategoryNoOutliers$time), mean(threeCategoryNoOutliers$time), mean(fourCategoryNoOutliers$time), mean(fiveCategoryNoOutliers$time), mean(sixCategoryNoOutliers$time))
+compareCategories$noOutlierSD = c(sd(twoCategoryNoOutliers$time), sd(threeCategoryNoOutliers$time), sd(fourCategoryNoOutliers$time), sd(fiveCategoryNoOutliers$time), sd(sixCategoryNoOutliers$time))
 
 compareCategories
-
+write.csv(compareCategories, paste("Output/Analysis/CompareCategoryMeans", savingPrefix, ".csv", sep=""))
 
 
 # -- category number effect --
@@ -207,10 +222,11 @@ compareCategories
 
 plotDataCompare(allCategory, x = "categoryNumber", color = "categoryChar")
 
-dataSet = allCategory
+dataSet = allCategoryNoOutliers
 xAxis = "categoryNumber"
 colorVar = "categoryChar"
-dataName = deparse(substitute(allCategory))
+yAxis = "time"
+dataName = deparse(substitute(allCategoryNoOutliers))
 message(dataName)
 linearModel = lm(time ~ exp(categoryNumber), data = dataSet)
 plot1 = ggplot(dataSet, aes(x = categoryNumber, y = time)) +
