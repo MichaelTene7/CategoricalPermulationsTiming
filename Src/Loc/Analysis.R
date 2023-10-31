@@ -1,5 +1,6 @@
 library(ggplot2)
 library(cowplot)
+library(dplyr)
 
 # -- read data times ---
 SYMTimes = readRDS("Output/Hiller/CategoricalPermulationsHillerTimesSYMRelax0.rds")
@@ -16,6 +17,7 @@ SYM20Phenotypes = readRDS("Output/Hiller/CategoricalPermulationsTimingHillerPhen
 inUsePhenotypes = SYM20Phenotypes
 inUseTimes = SYM20Times
 comboletters = c("M", "G")
+replaceLetters = c("PC", "AO")
 savingPrefix = "SYM20"
 
 
@@ -201,7 +203,7 @@ plot_grid(cat2SpecNumPlot, cat3SpecNumPlot, cat4SpecNumPlot, cat5SpecNumPlot, ca
 dev.off()
 
 
-# -- Category number effect --
+# -- Category number effect table --
 CompareCategoryMeans= c(mean(twoCategory$time), mean(threeCategory$time), mean(fourCategory$time), mean(fiveCategory$time), mean(sixCategory$time))
 CompareCatgeorySds = c(sd(twoCategory$time), sd(threeCategory$time), sd(fourCategory$time), sd(fiveCategory$time), sd(sixCategory$time))
 compareCategories = data.frame(CompareCategoryMeans, CompareCatgeorySds)
@@ -215,9 +217,7 @@ compareCategories
 write.csv(compareCategories, paste("Output/Analysis/CompareCategoryMeans", savingPrefix, ".csv", sep=""))
 
 
-# -- category number effect --
-
-
+# -- category number effect plot --
 
 
 plotDataCompare(allCategory, x = "categoryNumber", color = "categoryChar")
@@ -248,55 +248,228 @@ print(plot1)
 
 
 
-
-
-
-
-plotDataCompare(allCategory, color = "categoryChar")
-
-
-
-timeSpeciesCorrelation = function(dataSet){
-  model = lm(time ~ speciesNum, data = dataSet)
-  summary(model)
+# -- direct category comparisons -- 
+orderAnamgrams = function(inString){
+  paste(sort(strsplit(inString, NULL)[[1]]), collapse = "")
 }
 
-timeCateogryCorrelation = function(dataSet){
-  model = lm(time ~ categoryNumber, data = dataSet)
-  summary(model)
+phenoTypes = unique(allCategory$phen)
+
+
+unmergedPhenotypes = NULL
+mergedAndUnmergedPhenotypes = NULL
+comboComparisions = data.frame()
+
+for(i in 1:length(comboletters)){
+
+  letterInUse = comboletters[i]
+  replacementInUse = replaceLetters[i]
+  currentComboPhens = phenoTypes[grep(letterInUse, phenoTypes)]
+  decomboedPhens = sub(letterInUse, replacementInUse, currentComboPhens)
+  for(j in 1:length(currentComboPhens)){
+    comboPhen = currentComboPhens[j]
+    comboData = allCategory[allCategory$phen == comboPhen,]
+    comboAverage = mean(comboData$time)
+    comboSD = sd(comboData$time)
+    
+    decomboedPhenInput = decomboedPhens[j]
+    categoryNumber = nchar(decomboedPhenInput)
+    possibleDecomboPhens = phenoTypes[grep(orderAnamgrams(decomboedPhenInput), sapply(phenoTypes, orderAnamgrams ))]
+    decomboPhenOutput = possibleDecomboPhens[which(nchar(possibleDecomboPhens) == categoryNumber)]
+    
+    decomboedData = allCategory[allCategory$phen == decomboPhenOutput,]
+    deComboAverage = mean(decomboedData$time)
+    deComboSD = sd(decomboedData$time)
+    
+    timeDifference = deComboAverage - comboAverage 
+    diffPercent = ((deComboAverage - comboAverage) / comboAverage) * 100
+    
+    ComboPhen = letterInUse
+    
+    output = data.frame(categoryNumber, ComboPhen, comboSD, deComboSD, comboAverage, deComboAverage, timeDifference, diffPercent)
+    rownames(output) = paste(comboPhen, "/", decomboPhenOutput, sep="")
+    comboComparisions = rbind(comboComparisions, output)
+    
+    names(decomboPhenOutput) = comboPhen
+    names(comboPhen) = comboPhen
+    unmergedPhenotypes = append(unmergedPhenotypes, decomboPhenOutput)
+    mergedAndUnmergedPhenotypes = append(mergedAndUnmergedPhenotypes, comboPhen)
+    mergedAndUnmergedPhenotypes = append(mergedAndUnmergedPhenotypes, decomboPhenOutput)
+  }
+}
+options(scipen = 5)
+comboComparisions
+unmergedPhenotypes
+mergedAndUnmergedPhenotypes
+
+mergeUnmergeData = allCategory[which(allCategory$phen %in% mergedAndUnmergedPhenotypes),]
+phenNames = mergeUnmergeData$phen
+mergeNames = NULL
+for(i in 1:length(phenNames)){
+  mergeNames[i] = names(which(mergedAndUnmergedPhenotypes == phenNames[i]))
+}
+mergeUnmergeData$mergeNames = mergeNames
+
+mergeUnmergeDataNoOutliers = allCategoryNoOutliers[which(allCategoryNoOutliers$phen %in% mergedAndUnmergedPhenotypes),]
+phenNames = mergeUnmergeDataNoOutliers$phen
+mergeNames = NULL
+for(i in 1:length(phenNames)){
+  mergeNames[i] = names(which(mergedAndUnmergedPhenotypes == phenNames[i]))
+}
+mergeUnmergeDataNoOutliers$mergeNames = mergeNames
+
+
+
+
+plotDataSimple = function(dataSet, xAxis = "speciesNum", yAxis = "time", colorVar = "phen", modelType = "lm"){
+  dataName = deparse(substitute(dataSet))
+  message(dataName)
+  #linearModel = lm(paste(yAxis, "~", xAxis), data = dataSet)
+  plot1 = ggplot(dataSet, aes_string(x = xAxis, y = yAxis)) +
+    geom_point(aes_string(color = colorVar))
+  print(plot1)
+  
+  #dataNoOutliersName = paste(dataName, "NoOutliers", sep='')
+  #dataNoOutliers = get(dataNoOutliersName)
+  #if(!nrow(dataSet) == nrow(dataNoOutliers)){
+  #  plot2 = ggplot(dataNoOutliers, aes_string(x = xAxis, y = yAxis)) +
+  #    geom_point(aes_string(color = colorVar))+
+  #    labs(title = dataNoOutliersName)+
+  #  print(plot2)
+  #}
+}
+mergePlot2 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==2,], xAxis = "mergeNames", colorVar = "categoryChar")
+mergePlot3 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==3,], xAxis = "mergeNames", colorVar = "categoryChar")
+mergePlot4 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==4,], xAxis = "mergeNames", colorVar = "categoryChar")
+mergePlot5 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==5,], xAxis = "mergeNames", colorVar = "categoryChar")
+
+plot_grid(mergePlot2, mergePlot3, mergePlot4, mergePlot5, nrow = 2)
+
+mergePlotNoOL2 = plotDataSimple(mergeUnmergeDataNoOutliers[nchar(mergeUnmergeDataNoOutliers$mergeNames)==2,], xAxis = "mergeNames", colorVar = "categoryChar")
+mergePlotNoOL3 = plotDataSimple(mergeUnmergeDataNoOutliers[nchar(mergeUnmergeDataNoOutliers$mergeNames)==3,], xAxis = "mergeNames", colorVar = "categoryChar")
+mergePlotNoOL4 = plotDataSimple(mergeUnmergeDataNoOutliers[nchar(mergeUnmergeDataNoOutliers$mergeNames)==4,], xAxis = "mergeNames", colorVar = "categoryChar")
+mergePlotNoOL5 = plotDataSimple(mergeUnmergeDataNoOutliers[nchar(mergeUnmergeDataNoOutliers$mergeNames)==5,], xAxis = "mergeNames", colorVar = "categoryChar")
+
+
+pdf2Name = paste("Output/Analysis/mergeUnmergePlots", savingPrefix, ".pdf", sep="")
+pdf(file = pdf2Name, height = 10, width = 16)
+plot_grid(mergePlot2, mergePlot3, mergePlot4, mergePlot5, nrow = 2)
+plot_grid(mergePlotNoOL2, mergePlotNoOL3, mergePlotNoOL4, mergePlotNoOL5, nrow = 2)
+dev.off()
+
+
+
+combo3 = comboComparisions[which(comboComparisions$categoryNumber ==3),]
+mean(combo3$diffPercent)
+sd(combo3$diffPercent)
+mean(combo3$diffPercent[combo3$ComboPhen == "M"])
+mean(combo3$diffPercent[combo3$ComboPhen == "G"])
+
+combo4 = comboComparisions[which(comboComparisions$categoryNumber ==4),]
+mean(combo4$diffPercent)
+sd(combo4$diffPercent)
+mean(combo4$diffPercent[combo4$ComboPhen == "M"])
+mean(combo4$diffPercent[combo4$ComboPhen == "G"])
+
+mean(combo4$diffPercent[-12])
+sd(combo4$diffPercent[-12])
+mean(combo4$diffPercent[combo4$ComboPhen == "M"])
+mean(combo4$diffPercent[combo4$ComboPhen == "G"][-4])
+
+
+combo5 = comboComparisions[which(comboComparisions$categoryNumber ==5),]
+mean(combo5$diffPercent)
+sd(combo5$diffPercent)
+mean(combo5$diffPercent[combo5$ComboPhen == "M"])
+mean(combo5$diffPercent[combo5$ComboPhen == "G"])
+
+mean(c(combo5$diffPercent[combo5$ComboPhen == "M"][-3], combo5$diffPercent[combo5$ComboPhen == "G"][-5]))
+sd(c(combo5$diffPercent[combo5$ComboPhen == "M"][-3], combo5$diffPercent[combo5$ComboPhen == "G"][-5]))
+mean(combo5$diffPercent[combo5$ComboPhen == "M"][-3])
+mean(combo5$diffPercent[combo5$ComboPhen == "G"][-5])
+
+
+
+combo6 = comboComparisions[which(comboComparisions$categoryNumber ==6),]
+mean(combo6$diffPercent)
+mean(combo6$diffPercent[combo6$ComboPhen == "M"])
+mean(combo6$diffPercent[combo6$ComboPhen == "G"])
+
+
+
+
+# -- double combo comparissions 
+letter1phens = phenoTypes[grep(comboletters[1], phenoTypes)]
+letter2phens = phenoTypes[grep(comboletters[2], phenoTypes)]
+doubleComboPhens =  letter1phens[letter1phens %in% letter2phens]
+
+doubleComboComparisions = data.frame()
+doubleUnmergedPhenotypes = NULL
+doubleMergedAndUnmergedPhenotypes = NULL
+
+
+decomboedDoubles = doubleComboPhens
+
+for(j in 1:length(comboletters)){
+  letterInUse = comboletters[j]
+  replacementInUse = replaceLetters[j]
+  decomboedDoubles = sub(letterInUse, replacementInUse, decomboedDoubles)
 }
 
-# -- plot with outliers -- 
+for(j in 1:length(decomboedDoubles)){
+  comboPhen = doubleComboPhens[j]
+  comboData = allCategory[allCategory$phen == comboPhen,]
+  comboAverage = mean(comboData$time)
+  comboSD = sd(comboData$time)
+  
+  decomboedPhenInput = decomboedDoubles[j]
+  categoryNumber = nchar(decomboedPhenInput)
+  possibleDecomboPhens = phenoTypes[grep(orderAnamgrams(decomboedPhenInput), sapply(phenoTypes, orderAnamgrams ))]
+  decomboPhenOutput = possibleDecomboPhens[which(nchar(possibleDecomboPhens) == categoryNumber)]
+  
+  decomboedData = allCategory[allCategory$phen == decomboPhenOutput,]
+  deComboAverage = mean(decomboedData$time)
+  deComboSD = sd(decomboedData$time)
+  
+  timeDifference = deComboAverage - comboAverage 
+  diffPercent = ((deComboAverage - comboAverage) / comboAverage) * 100
+  
+  ComboPhen = paste(comboletters, collapse = "")
+  
+  output = data.frame(categoryNumber, ComboPhen, comboSD, deComboSD, comboAverage, deComboAverage, timeDifference, diffPercent)
+  rownames(output) = paste(comboPhen, "/", decomboPhenOutput, sep="")
+  doubleComboComparisions = rbind(doubleComboComparisions, output)
+  
+  names(decomboPhenOutput) = comboPhen
+  names(comboPhen) = comboPhen
+  doubleUnmergedPhenotypes = append(doubleUnmergedPhenotypes, decomboPhenOutput)
+  doubleMergedAndUnmergedPhenotypes = append(doubleMergedAndUnmergedPhenotypes, comboPhen)
+  doubleMergedAndUnmergedPhenotypes = append(doubleMergedAndUnmergedPhenotypes, decomboPhenOutput)
+}
+doubleComboComparisions  
 
-timeSpeciesCorrelation(compareData) # no correlation between speceis number and time when mutliple categories 
-timeCateogryCorrelation(compareData)
 
-timeSpeciesCorrelation(twoCategory)
+doubleMergeUnmergeData = allCategory[which(allCategory$phen %in% doubleMergedAndUnmergedPhenotypes),]
+phenNames = doubleMergeUnmergeData$phen
+mergeNames = NULL
+for(i in 1:length(phenNames)){
+  mergeNames[i] = names(which(doubleMergedAndUnmergedPhenotypes == phenNames[i]))
+}
+doubleMergeUnmergeData$mergeNames = mergeNames
 
-
-
-
-
-compareDataOutliers = which(compareData$time >2300)
-compareDataNoOutliers = compareData[-compareDataOutliers,]
-ggplot(compareDataNoOutliers, aes(x = speciesNum, y = time, color = categoryNumber)) +
-  geom_point()
+doubleMergePlot = plotDataSimple(doubleMergeUnmergeData, xAxis = "mergeNames", colorVar = "categoryChar")
 
 
 
 
-cat4 = compareData[compareData$categoryNumber ==4, ]
-cat4Outliers = which(cat4$time > 2500)
-cat4NoOutliers = cat4[-cat4Outliers,]
+spacer = data.frame(NA, NA, NA, NA, NA, NA, NA, NA)
+colnames(spacer) = colnames(comboComparisions)
+rownames(spacer) = "-"
+allComboComparisions = rbind(comboComparisions, spacer)
+allComboComparisions = rbind(allComboComparisions, doubleComboComparisions)
 
-
-ggplot(cat4NoOutliers, aes(x = speciesNum, y = time, color = phen)) +
-  geom_jitter()
-
-
-
-plot(compareData$categoryNumber, compareData$time, color = compareData$combo)
-
+comboComparisionsFilename = paste("Output/Analysis/DirectComboComparisions", savingPrefix, ".csv")
+write.csv(allComboComparisions, comboComparisionsFilename)
 
 
 
