@@ -138,7 +138,6 @@ getOutlierPhen = function(data){
 
 outlierCutoff = 2
 
-
 removeOutliers = function(yesOutliers, outlierCutoff =2){
   noOutliers = yesOutliers
   if(!sd(noOutliers$time) > (mean(noOutliers$time)/1.5)){
@@ -162,6 +161,28 @@ threeCategoryNoOutliers = removeOutliers(threeCategory)
 fourCategoryNoOutliers = removeOutliers(fourCategory)
 fiveCategoryNoOutliers = removeOutliers(fiveCategory)
 sixCategoryNoOutliers = removeOutliers(sixCategory)
+
+getOutlierPhenotypes = function(data, outlierCutoff =2){
+  outlierPhens = character()
+  uniquePhens = unique(data$phen)
+  for(i in 1:length(uniquePhens)){
+    currentPhen = uniquePhens[i]
+    currentRows = data[which(data$phen == currentPhen),]
+    averageZ = mean(currentRows$zScore)
+    if(averageZ > outlierCutoff){
+      message(paste( "Phenotype", currentPhen, "is an outlier phenotype, average zScore of", averageZ))
+      outlierPhens = append(outlierPhens, currentPhen)
+    }
+  }
+  if(length(outlierPhens) == 0){
+    message("No outlier phenotypes")
+  }else{
+    message("Outliers:", paste(outlierPhens))
+  }
+  outlierPhens
+}
+getOutlierPhenotypes(twoCategory)
+getOutlierPhenotypes(threeCategory)
 
 
 allCategoryNoOutliers = rbind(twoCategoryNoOutliers, threeCategoryNoOutliers, fourCategoryNoOutliers, fiveCategoryNoOutliers, sixCategoryNoOutliers)
