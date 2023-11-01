@@ -309,3 +309,135 @@ function(tree, Q, P, nodes, tips, T0, Nk, cycles, alpha) {
   end = Sys.time()
   return(list(nodes = nodes, lik = log10(curr_lik)))
 }
+
+# ------------------- old analysis code-------------------
+
+# old functions 
+
+plotDataCompare = function(dataSet, xAxis = "speciesNum", yAxis = "time", colorVar = "phen", modelType = "lm"){
+  dataName = deparse(substitute(dataSet))
+  message(dataName)
+  linearModel = lm(paste(yAxis, "~", xAxis), data = dataSet)
+  plot1 = ggplot(dataSet, aes_string(x = xAxis, y = yAxis)) +
+    geom_point(aes_string(color = colorVar))+
+    labs(title = paste(dataName, relaxationLevel))+
+    geom_smooth(method = "lm", show.legend = F)+
+    if(!is.na(coef(linearModel)[2])){
+      annotate("text",
+               x = min(dataSet[,xAxis]+ ((max(dataSet[,xAxis]) - min(dataSet[,xAxis]))/4)), y = max(dataSet[, yAxis]), 
+               label = paste(
+                 "y =", 
+                 round(coef(linearModel)[2], 2), 
+                 "x +", 
+                 round(coef(linearModel)[1], 2), 
+                 "   R^2 = ", 
+                 format(summary(linearModel)$r.squared, digits = 3)
+               )
+      )
+    }
+  print(plot1)
+  
+  dataNoOutliersName = paste(dataName, "NoOutliers", sep='')
+  dataNoOutliers = get(dataNoOutliersName)
+  if(!nrow(dataSet) == nrow(dataNoOutliers)){
+    linearModel = lm(paste(yAxis, "~", xAxis), data = dataNoOutliers)
+    plot2 = ggplot(dataNoOutliers, aes_string(x = xAxis, y = yAxis)) +
+      geom_point(aes_string(color = colorVar))+
+      labs(title = paste(dataNoOutliersName, relaxationLevel))+
+      geom_smooth(method = "lm", show.legend = F)+
+      if(!is.na(coef(linearModel)[2])){
+        annotate("text",
+                 x = min(dataNoOutliers[,xAxis]+ ((max(dataNoOutliers[,xAxis]) - min(dataNoOutliers[,xAxis]))/4)), y = max(dataNoOutliers[, yAxis]), 
+                 label = paste(
+                   "y =", 
+                   round(coef(linearModel)[2], 2), 
+                   "x +", 
+                   round(coef(linearModel)[1], 2), 
+                   "   R^2 = ", 
+                   format(summary(linearModel)$r.squared, digits = 3)
+                 )
+        )
+      }
+    
+    print(plot2)
+  }else{
+    message("Dataset has no outliers.")
+    return(plot1)
+  }
+}
+
+# ------ Old outlier removal code ------
+
+
+getOutlierPhenotypes = function(data, outlierCutoff){
+  outlierPhens = character()
+  uniquePhens = unique(data$phen)
+  for(i in 1:length(uniquePhens)){
+    currentPhen = uniquePhens[i]
+    currentRows = data[which(data$phen == currentPhen),]
+    averageZ = mean(currentRows$zScore)
+    if(averageZ > outlierCutoff){
+      message(paste( "Phenotype", currentPhen, "is an outlier phenotype, average zScore of", averageZ))
+      outlierPhens = append(outlierPhens, currentPhen)
+    }
+  }
+  if(length(outlierPhens) == 0){
+    message("No outlier phenotypes")
+  }else{
+    message("Outliers:", paste(outlierPhens))
+  }
+  outlierPhens
+}
+
+while(sd(twoCategoryNoOutliers$time) > (mean(twoCategoryNoOutliers$time)/1.5)){
+  outlierPhens = NULL
+  outlierPhens = getOutlierPhenotypes(twoCategory, outlierCutoff)
+  twoCategoryOutlier = names(getOutlierPhen(twoCategory))
+  twoCategoryNoOutliers = subset(twoCategory, !phen %in% twoCategoryOutlier)
+}
+
+
+sd(threeCategory$time)
+mean(threeCategory$time)
+
+sd(fourCategory$time)
+mean(fourCategory$time)
+
+sd(fiveCategory$time)
+mean(fiveCategory$time)
+
+
+
+
+
+
+
+twoCategoryOutlier = getOutlierPhenotypes(twoCategory, outlierCutoff)
+threeCategoryOutlier = getOutlierPhenotypes(threeCategory, outlierCutoff)
+fourCategoryOutlier = getOutlierPhenotypes(fourCategory, outlierCutoff)
+fiveCategoryOutlier = getOutlierPhenotypes(fiveCategory, outlierCutoff)
+sixCategoryOutlier = getOutlierPhenotypes(sixCategory, outlierCutoff)
+
+#manually add any remaining outliers
+#fiveCategoryOutlier = append(fiveCategoryOutlier, "AOHIM")
+
+twoCategoryNoOutliers = subset(twoCategory, !phen %in% twoCategoryOutlier)
+threeCategoryNoOutliers = subset(threeCategory, !phen %in% threeCategoryOutlier)
+fourCategoryNoOutliers = subset(fourCategory, !phen %in% fourCategoryOutlier)
+fiveCategoryNoOutliers = subset(fiveCategory, !phen %in% fiveCategoryOutlier)
+sixCategoryNoOutliers = subset(sixCategory, !phen %in% sixCategoryOutlier)
+
+#re-run outlier check in case one was Such a deviation it threw off detection 
+
+twoCategoryNoOutliers$zScore = zscores(twoCategoryNoOutliers$time)
+threeCategoryNoOutliers$zScore = zscores(threeCategoryNoOutliers$time)
+fourCategoryNoOutliers$zScore = zscores(fourCategoryNoOutliers$time)
+fiveCategoryNoOutliers$zScore = zscores(fiveCategoryNoOutliers$time)
+sixCategoryNoOutliers$zScore = zscores(sixCategoryNoOutliers$time)
+
+twoCategoryOutlier = getOutlierPhenotypes(twoCategoryNoOutliers, outlierCutoff)
+threeCategoryOutlier = getOutlierPhenotypes(threeCategoryNoOutliers, outlierCutoff)
+fourCategoryOutlier = getOutlierPhenotypes(fourCategoryNoOutliers, outlierCutoff)
+fiveCategoryOutlier = getOutlierPhenotypes(fiveCategoryNoOutliers, outlierCutoff)
+sixCategoryOutlier = getOutlierPhenotypes(sixCategoryNoOutliers, outlierCutoff)
+
