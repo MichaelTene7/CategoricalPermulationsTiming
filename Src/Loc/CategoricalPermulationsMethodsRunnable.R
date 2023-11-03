@@ -5,13 +5,13 @@ mainTrees = readRDS("Data/CategoricalPermulationsTimingHillerTrees.rds")
 #premadeTimes = readRDS("Data/CategoricalPermulationsTimes.rds")
 source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/RelaxedRejectionPermFuncs.R")
-args = c("m=SYM", "r=.20", "f=T", "s=F")
+args = c("m=SYM", "r=.20", "f=F", "s=T")
 
 # -- Argument Imports ---
 args = commandArgs(trailingOnly = TRUE)
 relaxation = 0 
 customRateMatrix = matrix(c(1,2,3,2,4,5,6,7,8),3)
-fiveSixOnly = F
+fiveOnly = F
 sixOnly = F
 
 #Rate Model
@@ -34,17 +34,17 @@ if(!is.na(cmdArgImport('r'))){
 #five only 
 if(!is.na(cmdArgImport('f'))){
   fiveOnly = cmdArgImport('f')
-  fiveOnly = as.logical(relaxation)
+  fiveOnly = as.logical(fiveOnly)
 }else{
-  message("fiveSixOnly not specified, running all")
+  message("fiveOnly not specified, running all")
 }
 
 #six only 
 if(!is.na(cmdArgImport('s'))){
-  SixOnly = cmdArgImport('s')
-  SixOnly = as.logical(relaxation)
+  sixOnly = cmdArgImport('s')
+  sixOnly = as.logical(sixOnly)
 }else{
-  message("fiveSixOnly not specified, running all")
+  message("sixOnly not specified, running all")
 }
 
 
@@ -52,7 +52,7 @@ fileNameIdentifier = paste(names(rateModel)[1], "Relax", relaxation, sep="")
 phenotypeOutFilename = paste("Output/Hiller/CategoricalPermulationsTimingHillerPhenotypes", fileNameIdentifier, ".rds", sep="")
 if(fiveOnly){
   timesOutFilename = paste("Output/Hiller/CategoricalPermulationsHillerTimes", fileNameIdentifier, "FiveOnly.rds", sep="")
-}else if(SixOnly){
+}else if(sixOnly){
   timesOutFilename = paste("Output/Hiller/CategoricalPermulationsHillerTimes", fileNameIdentifier, "SixOnly.rds", sep="")
 }else{
   timesOutFilename = paste("Output/Hiller/CategoricalPermulationsHillerTimes", fileNameIdentifier, ".rds", sep="")
