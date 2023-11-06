@@ -5,12 +5,14 @@ mainTrees = readRDS("Data/CategoricalPermulationsTimingHillerTrees.rds")
 #premadeTimes = readRDS("Data/CategoricalPermulationsTimes.rds")
 source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/RelaxedRejectionPermFuncs.R")
-args = c("m=SYM", "r=.20")
+args = c("m=SYM", "r=.20", "f=F", "s=T")
 
 # -- Argument Imports ---
 args = commandArgs(trailingOnly = TRUE)
 relaxation = 0 
 customRateMatrix = matrix(c(1,2,3,2,4,5,6,7,8),3)
+fiveOnly = F
+sixOnly = F
 
 #Rate Model
 if(!is.na(cmdArgImport('m'))){
@@ -29,11 +31,33 @@ if(!is.na(cmdArgImport('r'))){
   message("Relaxation level not specified, using 0")
 }
 
-fileNameIdentifier = paste(names(rateModel)[1], "Relax", relaxation, sep="")
-"Output/CategoricalPermuationsTimingPhenotypesER.rds"
-phenotypeOutFilename = paste("Output/Hiller/CategoricalPermulationsTimingHillerPhenotypes", fileNameIdentifier, ".rds", sep="")
-timesOutFilename = paste("Output/Hiller/CategoricalPermulationsHillerTimes", fileNameIdentifier, ".rds", sep="")
+#five only 
+if(!is.na(cmdArgImport('f'))){
+  fiveOnly = cmdArgImport('f')
+  fiveOnly = as.logical(fiveOnly)
+}else{
+  message("fiveOnly not specified, running all")
+}
 
+#six only 
+if(!is.na(cmdArgImport('s'))){
+  sixOnly = cmdArgImport('s')
+  sixOnly = as.logical(sixOnly)
+}else{
+  message("sixOnly not specified, running all")
+}
+
+
+fileNameIdentifier = paste(names(rateModel)[1], "Relax", relaxation, sep="")
+phenotypeOutFilename = paste("Output/Hiller/CategoricalPermulationsTimingHillerPhenotypes", fileNameIdentifier, ".rds", sep="")
+if(fiveOnly){
+  timesOutFilename = paste("Output/Hiller/CategoricalPermulationsHillerTimes", fileNameIdentifier, "FiveOnly.rds", sep="")
+}else if(sixOnly){
+  timesOutFilename = paste("Output/Hiller/CategoricalPermulationsHillerTimes", fileNameIdentifier, "SixOnly.rds", sep="")
+}else{
+  timesOutFilename = paste("Output/Hiller/CategoricalPermulationsHillerTimes", fileNameIdentifier, ".rds", sep="")
+}
+message(timesOutFilename)
 
 
 # --- Example code used to generate permualtions times ---
@@ -111,8 +135,9 @@ timeTrials = function(phenSet, outMat, numTrials = 5, subs = NULL, subOnly = F, 
         next()
       }
     }
-    phenotypesUsed = phenSet[,1]
+    phenotypesUsed = phenSet[,i]
     phenVec = makePhenotypeVector(phenotypesUsed, phenCode, substitutions = subs)
+    message(phenVec)
     if(!phenOnly){
       for(k in 1:numTrials){
         testPermTime(phenVec, paste(phenCode, "_", k, sep=""))
@@ -132,6 +157,7 @@ addBreakToOutputs = function(breakName){
   names(timesOut)[position2] <<- breakName
 }
 
+{
 # ---- Generate the phenotype sets ----
 phenotypeOptions = unique(phenotypeVectorMain)
 phenotypeLetterOptions = substring(phenotypeOptions, 1, 1)
@@ -186,7 +212,7 @@ phen6GeneralCols = which(grep("O", colnames(combinations6Phen)) %in% grep("A", c
 
 # - Both - 
 bothSubs = append(meativoreSubs, generalivoreSubs)
-
+}
 
 
 
@@ -197,54 +223,65 @@ bothSubs = append(meativoreSubs, generalivoreSubs)
 phenotypeVectorsOut = list()
 timesOut = list()
 
-# - Run timing Tests - 
-addBreakToOutputs("2Phenotypes")
-phen2Times = data.frame()
-timeTrials(combinations2Phen, phen2Times)
-timeTrials(combinations3Phen, phen2Times, subs = meativoreSubs, subOnly = T)
-timeTrials(combinations3Phen, phen2Times, subs = generalivoreSubs, subOnly = T)
-timeTrials(combinations4Phen, phen2Times, subs = bothSubs, subOnly = T)
+if(!fiveOnly & !sixOnly){
+  # - Run timing Tests - 
+  addBreakToOutputs("2Phenotypes")
+  phen2Times = data.frame()
+  timeTrials(combinations2Phen, phen2Times)
+  timeTrials(combinations3Phen, phen2Times, subs = meativoreSubs, subOnly = T)
+  timeTrials(combinations3Phen, phen2Times, subs = generalivoreSubs, subOnly = T)
+  timeTrials(combinations4Phen, phen2Times, subs = bothSubs, subOnly = T)
+  
+  saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+  saveRDS(timesOut, timesOutFilename)
+  
+  
+  addBreakToOutputs("3Phenotypes")
+  phen3Times = data.frame()
+  timeTrials(combinations3Phen, phen3Times)
+  timeTrials(combinations4Phen, phen3Times, subs = meativoreSubs, subOnly = T)
+  timeTrials(combinations4Phen, phen3Times, subs = generalivoreSubs, subOnly = T)
+  timeTrials(combinations5Phen, phen3Times, subs = bothSubs, subOnly = T)
+  
+  saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+  saveRDS(timesOut, timesOutFilename)
+  
+  addBreakToOutputs("4Phenotypes")
+  phen4Times = data.frame()
+  timeTrials(combinations4Phen, phen4Times)
+  timeTrials(combinations5Phen, phen4Times, subs = meativoreSubs, subOnly = T)
+  timeTrials(combinations5Phen, phen4Times, subs = generalivoreSubs, subOnly = T)
+  timeTrials(combinations6Phen, phen4Times, subs = bothSubs, subOnly = T)
+  
+  saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+  saveRDS(timesOut, timesOutFilename)
+}else{
+  message("Skipping")
+}
 
-saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
-saveRDS(timesOut, timesOutFilename)
+if(!sixOnly){
+  addBreakToOutputs("5Phenotypes")
+  phen5Times = data.frame()
+  timeTrials(combinations5Phen, phen5Times)
+  timeTrials(combinations6Phen, phen5Times, subs = meativoreSubs, subOnly = T)
+  timeTrials(combinations6Phen, phen5Times, subs = generalivoreSubs, subOnly = T)
+  
+  saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+  saveRDS(timesOut, timesOutFilename)
+}else{
+  message("Skipping")
+}
 
-
-addBreakToOutputs("3Phenotypes")
-phen3Times = data.frame()
-timeTrials(combinations3Phen, phen3Times)
-timeTrials(combinations4Phen, phen3Times, subs = meativoreSubs, subOnly = T)
-timeTrials(combinations4Phen, phen3Times, subs = generalivoreSubs, subOnly = T)
-timeTrials(combinations5Phen, phen3Times, subs = bothSubs, subOnly = T)
-
-saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
-saveRDS(timesOut, timesOutFilename)
-
-addBreakToOutputs("4Phenotypes")
-phen4Times = data.frame()
-timeTrials(combinations4Phen, phen4Times)
-timeTrials(combinations5Phen, phen4Times, subs = meativoreSubs, subOnly = T)
-timeTrials(combinations5Phen, phen4Times, subs = generalivoreSubs, subOnly = T)
-timeTrials(combinations6Phen, phen4Times, subs = bothSubs, subOnly = T)
-
-saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
-saveRDS(timesOut, timesOutFilename)
-
-addBreakToOutputs("5Phenotypes")
-phen5Times = data.frame()
-timeTrials(combinations5Phen, phen5Times)
-timeTrials(combinations6Phen, phen5Times, subs = meativoreSubs, subOnly = T)
-timeTrials(combinations6Phen, phen5Times, subs = generalivoreSubs, subOnly = T)
-
-saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
-saveRDS(timesOut, timesOutFilename)
-
-addBreakToOutputs("6Phenotypes")
-phen6Times = data.frame()
-timeTrials(combinations6Phen, phen6Times)
-
-saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
-saveRDS(timesOut, timesOutFilename)
-
+if(!fiveOnly){
+  addBreakToOutputs("6Phenotypes")
+  phen6Times = data.frame()
+  timeTrials(combinations6Phen, phen6Times)
+  
+  saveRDS(phenotypeVectorsOut, phenotypeOutFilename)
+  saveRDS(timesOut, timesOutFilename)
+}else{
+  message("Skipping")
+}
 
 # -- Save the outputs -- 
 saveRDS(phenotypeVectorsOut, phenotypeOutFilename)

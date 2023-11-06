@@ -41,7 +41,7 @@ if(!is.null(substitutions)){
 # - Reduce the vector to only species in the 6 phenotypes being examined - 
 phenotypes = c("Herbivore", "Omnivore", "Insectivore", "Carnivore", "Piscivore", "Anthropivore")
 
-cleanedPhenotypVector = mergedPhenotypVector[which(mergedPhenotypVector %in% phenotypes)] #This only remove two species which are not in the main analysis, and have a phenotype of NA
+cleanedPhenotypVector = mergedPhenotypVector[which(mergedPhenotypVector %in% phenotypes)] #This only removes two species which are not in the main analysis, and have a phenotype of NA
 
 mainAnalysisSpecies = readRDS("data/Old/MainRubyPhenotypes.rds")
 speciesNotInMainAnalysis = names(cleanedPhenotypVector)[which(!names(cleanedPhenotypVector) %in% names(mainAnalysisSpecies))]
