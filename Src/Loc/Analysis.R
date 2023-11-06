@@ -21,6 +21,9 @@ ERTimeTotalHours
 SYMTimeTotalHours
 timeDifferenceMinutes
 
+table = readRDS("Data/HillerZoonomPhenotypeTable.rds")
+write.csv(table, "Data/HillerZoonomPhenotypeTable.csv")
+
 
 ERTimes
 
