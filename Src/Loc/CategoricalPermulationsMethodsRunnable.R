@@ -110,7 +110,7 @@ testPermTime = function(phenotypeVec, phenCode){
 }
 
 
-timeTrials = function(phenSet, outMat, numTrials = 5, subs = NULL, subOnly = F, phenOnly = F){
+timeTrials = function(phenSet, outMat, numTrials = 2, subs = NULL, subOnly = F, phenOnly = F){
   skipRun = F
   for(i in 1:ncol(phenSet)){
     phenCode = colnames(phenSet)[i]
