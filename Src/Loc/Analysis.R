@@ -30,6 +30,9 @@ SYM0oneToFourPhenotypes = readRDS("Output/Hiller/CategoricalPermulationsTimingHi
 
 
 
+table = readRDS("Data/HillerZoonomPhenotypeTable.rds")
+write.csv(table, "Data/HillerZoonomPhenotypeTable.csv")
+
 
 ER20Times = readRDS("Output/Hiller/CategoricalPermulationsHillerTimesERRelax0.2.rds")
 ER20Phenotypes = readRDS("Output/Hiller/CategoricalPermulationsTimingHillerPhenotypesERRelax0.2.rds")
@@ -541,4 +544,49 @@ comboComparisionsFilename = paste("Output/Analysis/DirectComboComparisions", sav
 write.csv(allComboComparisions, comboComparisionsFilename)
 
 
+
+# -----   Compare relaxation levels timing  ------ 
+
+# get averages for each phenotype
+
+for(i in 1:length(phenoTypes)){
+  currenPhen = phenoTypes[i]
+  
+  
+  
+  letterInUse = comboletters[i]
+  replacementInUse = replaceLetters[i]
+  currentComboPhens = phenoTypes[grep(letterInUse, phenoTypes)]
+  decomboedPhens = sub(letterInUse, replacementInUse, currentComboPhens)
+  for(j in 1:length(currentComboPhens)){
+    comboPhen = currentComboPhens[j]
+    comboData = allCategory[allCategory$phen == comboPhen,]
+    comboAverage = mean(comboData$time)
+    comboSD = sd(comboData$time)
+    
+    decomboedPhenInput = decomboedPhens[j]
+    categoryNumber = nchar(decomboedPhenInput)
+    possibleDecomboPhens = phenoTypes[grep(orderAnamgrams(decomboedPhenInput), sapply(phenoTypes, orderAnamgrams ))]
+    decomboPhenOutput = possibleDecomboPhens[which(nchar(possibleDecomboPhens) == categoryNumber)]
+    
+    decomboedData = allCategory[allCategory$phen == decomboPhenOutput,]
+    deComboAverage = mean(decomboedData$time)
+    deComboSD = sd(decomboedData$time)
+    
+    timeDifference = deComboAverage - comboAverage 
+    diffPercent = ((deComboAverage - comboAverage) / comboAverage) * 100
+    
+    ComboPhen = letterInUse
+    
+    output = data.frame(categoryNumber, ComboPhen, comboSD, deComboSD, comboAverage, deComboAverage, timeDifference, diffPercent)
+    rownames(output) = paste(comboPhen, "/", decomboPhenOutput, sep="")
+    comboComparisions = rbind(comboComparisions, output)
+    
+    names(decomboPhenOutput) = comboPhen
+    names(comboPhen) = comboPhen
+    unmergedPhenotypes = append(unmergedPhenotypes, decomboPhenOutput)
+    mergedAndUnmergedPhenotypes = append(mergedAndUnmergedPhenotypes, comboPhen)
+    mergedAndUnmergedPhenotypes = append(mergedAndUnmergedPhenotypes, decomboPhenOutput)
+  }
+}
 
