@@ -549,10 +549,23 @@ write.csv(allComboComparisions, comboComparisionsFilename)
 
 # get averages for each phenotype
 
+
+currentRealxation = allCategory
+
+
+
 for(i in 1:length(phenoTypes)){
+  relaxationLevel 
   currenPhen = phenoTypes[i]
+  phenData = allCategory[allCategory$phen == comboPhen,]
+  phenAverage = mean(comboData$time)
+  phenSD = sd(comboData$time)
+  categoryNumber = nchar(currenPhen)
+  
+  phenName = paste()
   
   
+  output = data.frame(currenPhen, phenData, phenAverage, phenSD, categoryNumber, relaxationLevel)
   
   letterInUse = comboletters[i]
   replacementInUse = replaceLetters[i]
