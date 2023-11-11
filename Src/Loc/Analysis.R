@@ -52,7 +52,7 @@ inUseTimes = SYM10Times
 comboletters = c("M", "G")
 replaceLetters = c("PC", "AO")
 savingPrefix = "SYM10"
-relaxationLevel = "Relaxation 10"
+relaxationLevel = "Relaxation_10"
 
 
 
@@ -197,6 +197,7 @@ allDataList = list(outlieredDataList, noOutlierList)
 dataFilename = paste("Output/Analysis/RawData", savingPrefix, ".rds", sep="")
 saveRDS(allDataList, dataFilename)
 
+phenoTypes = unique(allCategory$phen)
 
 # --- end organization of data ---
 
@@ -320,6 +321,9 @@ plotDataExponential(allCategoryNoOutliers)
 plotDataCompare(allCategory, x = "categoryNumber", color = "categoryChar")
 dev.off()
 
+
+
+# --- UNIQUE TO THIS SCRIPT -----
 # -- direct category comparisons -- 
 orderAnamgrams = function(inString){
   paste(sort(strsplit(inString, NULL)[[1]]), collapse = "")
@@ -551,22 +555,24 @@ write.csv(allComboComparisions, comboComparisionsFilename)
 
 
 currentRealxation = allCategory
+inData = allCategory
+
+calculateAverages = function(inData, relaxationLevel){
+  output = NULL
+  for(i in 1:length(phenoTypes)){
+    relaxationLevel 
+    currenPhen = phenoTypes[i]
+    phenData = inData[inData$phen == currenPhen,]
+    phenAverage = mean(phenData$time)
+    phenSD = sd(phenData$time)
+    categoryNumber = nchar(currenPhen)
+    phenResults = data.frame(currenPhen, phenAverage, phenSD, categoryNumber, relaxationLevel)
+    output = rbind(output, phenResults)
+  }  
+  output
+}
 
 
-
-for(i in 1:length(phenoTypes)){
-  relaxationLevel 
-  currenPhen = phenoTypes[i]
-  phenData = allCategory[allCategory$phen == comboPhen,]
-  phenAverage = mean(comboData$time)
-  phenSD = sd(comboData$time)
-  categoryNumber = nchar(currenPhen)
-  
-  phenName = paste()
-  
-  
-  output = data.frame(currenPhen, phenData, phenAverage, phenSD, categoryNumber, relaxationLevel)
-  
   letterInUse = comboletters[i]
   replacementInUse = replaceLetters[i]
   currentComboPhens = phenoTypes[grep(letterInUse, phenoTypes)]

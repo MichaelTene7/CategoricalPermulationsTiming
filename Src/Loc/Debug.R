@@ -10,6 +10,13 @@ all.equal(newMainPhen, oldMainPhen)
 oldMainPhen[!names(oldMainPhen) %in% names(newMainPhen)]
 
 
+SYM20Phenotypes = readRDS("Output/Hiller/CategoricalPermulationsTimingHillerPhenotypesSYMRelax0.2.rds")
+HillerHGMPhenotype = SYM20Phenotypes$phenotypeHMG
+saveRDS(HillerHGMPhenotype, "Results/HillerHGMPhenotype.rds")
+
+HillerIPCPhenotype = SYM20Phenotypes$phenotypeIPC
+saveRDS(HillerIPCPhenotype, "Results/HillerIPCPhenotype.rds")
+
 all.equal(ERTimes, SYMTimes)
 
 ERTimesNumericMinutes = unlist(ERTimes[-c(1,2,3,4,7,8,9,10,11,22)])
