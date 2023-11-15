@@ -62,31 +62,51 @@ getOutlierPhen = function(data){
   outlierPhen
 }
 
-removeOutliers = function(yesOutliers, outlierFactor =1, outlierCutoff = 3){
+removeOutliers = function(yesOutliers, outlierFactor =1, outlierCutoff = 2, recursive = T, strict = T){
+  if(recursive == F & strict == T){
+    message("If strict, must be recursive.")
+    stop()
+  }
   noOutliers = yesOutliers
   outlier = (getOutlierPhen(noOutliers))
-  if(outlier>outlierCutoff){
-    message(paste( "Phenotype", names(outlier), "is an extreme outlier phenotype, average zScore of", outlier, ". Removing regardless of mean vs SD."))
-    noOutliers = subset(noOutliers, !phen %in% names(outlier))
+  if(!strict){
+    if(outlier>outlierCutoff){
+      message(paste( "Phenotype", names(outlier), "is an outlier phenotype, average zScore of", outlier, ". Not in strict mode, Removing regardless of mean vs SD."))
+      noOutliers = subset(noOutliers, !phen %in% names(outlier))
+      }
   }else if(!sd(noOutliers$time) > (mean(noOutliers$time)/outlierFactor)){
     message("No Outlier Phenotypes")
   }
-  while(sd(noOutliers$time) > (mean(noOutliers$time)/outlierFactor)){
-    outlier = NULL
-    outlier = (getOutlierPhen(noOutliers))
-    message(paste( "Phenotype", names(outlier), "is an outlier phenotype, average zScore of", outlier))
-    #if(outlier > outlierCutoff){
-    noOutliers = subset(noOutliers, !phen %in% names(outlier))
-    #}else{
-    #  message("Z-score too low, not removing phenotype")
-    #  break()
-    #}
+
+  if(recursive){
+    while(sd(noOutliers$time) > (mean(noOutliers$time)/outlierFactor)){
+      outlier = NULL
+      outlier = (getOutlierPhen(noOutliers))
+      message(paste( "Phenotype", names(outlier), "is an outlier phenotype, average zScore of", outlier))
+      if(strict){
+        if(outlier>outlierCutoff){
+          message(paste( "Phenotype", names(outlier), "is greater than cutoff, removing."))
+          noOutliers = subset(noOutliers, !phen %in% names(outlier))
+        }else{
+          message("In strict mode, not removing regardless.")
+          break()
+        }
+      }else{
+        noOutliers = subset(noOutliers, !phen %in% names(outlier))
+      }
+      #if(outlier > outlierCutoff){
+
+      #}else{
+      #  message("Z-score too low, not removing phenotype")
+      #  break()
+      #}
+    }
   }
   noOutliers
 }
 
 # - MAIN FUNCTION - 
-dataframeTimes = function(inUseTimes, prefix){
+dataframeTimes = function(inUseTimes, prefix, recursive = T){
   # -- Make the main dataframe --
   compareData = data.frame(names(inUseTimes))
   names(compareData) = "runName"
@@ -139,20 +159,20 @@ dataframeTimes = function(inUseTimes, prefix){
   allCategory = rbind(twoCategory, threeCategory, fourCategory, fiveCategory, sixCategory)
   # -- Remove outliers --
   message("TwoCategory")
-  twoCategoryNoOutliers = removeOutliers(twoCategory)
+  twoCategoryNoOutliers = removeOutliers(twoCategory, recursive = recursive)
   message("ThreeCategory")
-  threeCategoryNoOutliers = removeOutliers(threeCategory)
+  threeCategoryNoOutliers = removeOutliers(threeCategory, recursive = recursive)
   message("FourCategory")
-  fourCategoryNoOutliers = removeOutliers(fourCategory)
+  fourCategoryNoOutliers = removeOutliers(fourCategory, recursive = recursive)
   if(!nrow(fiveCategory)==0){
     message("FiveCategory")
-    fiveCategoryNoOutliers = removeOutliers(fiveCategory)
+    fiveCategoryNoOutliers = removeOutliers(fiveCategory, recursive = recursive)
   }else{
     fiveCategoryNoOutliers = fiveCategory 
   }
   if(!nrow(sixCategory)==0){
     message("SixCategory")
-    sixCategoryNoOutliers = removeOutliers(sixCategory)
+    sixCategoryNoOutliers = removeOutliers(sixCategory, recursive = recursive)
   }else{
     sixCategoryNoOutliers = sixCategory
   }
@@ -290,22 +310,30 @@ gridplot = arrangeGrob(cat2SpecNumPlot, cat3SpecNumPlot, cat4SpecNumPlot, cat5Sp
 titleGrob = textGrob(paste(dataListName, outlierString), gp = gpar(fontface = "bold", fontsize = 16))
 finalPlot = grid.arrange(titleGrob, gridplot, ncol = 1, heights = c(1, 10))
 print(finalPlot)
+return(finalPlot)
 }
 
 #- Category effect plot - 
 
-categoryEffectPlot = function(dataList, printSubplots = F){
+categoryEffectPlot = function(dataList, printSubplots = F, includeOutlierPlot = T){
   
   dataListName = deparse(substitute(dataList))
   dataListName = sub("DataList", "", dataListName)
   
   
-  catEffectPlotOutlier = plotDataExponential(dataList[[1]]$allCategory, "Outliers Included", printSubplots)
+  
+  if(includeOutlierPlot){
   catEffectPlotNoOutlier = plotDataExponential(dataList[[2]]$allCategory, "Outliers Excluded", printSubplots)
+  catEffectPlotOutlier = plotDataExponential(dataList[[1]]$allCategory, "Outliers Included", printSubplots)
   gridplot = arrangeGrob(catEffectPlotOutlier, catEffectPlotNoOutlier, nrow =1)
   titleGrob = textGrob(paste(dataListName), gp = gpar(fontface = "bold", fontsize = 16))
   finalPlot = grid.arrange(titleGrob, gridplot, ncol = 1, heights = c(1, 10))
   print(finalPlot)
+  return(finalPlot)
+  }else{
+    catEffectPlotNoOutlier = plotDataExponential(dataList[[2]]$allCategory, "Category Number Effect", printSubplots)
+    return(catEffectPlotNoOutlier)
+  }
 }
 
 
@@ -343,6 +371,50 @@ relaxationEffectPlot = function(meansSet, printSubplots = F){
   gridplot = plot_grid(plot2,plot3,plot4,plot5,plot6,outlierPlot, nrow =3)
   print(gridplot)
 }
+
+
+speciesAndCategroyTimePlot = function(dataList, outlierBoolean, printSubplots = F){
+  dataListName = deparse(substitute(dataList))
+  dataListName = sub("DataList", "", dataListName)
+  yesOutlierData = dataList[[1]]
+  names(yesOutlierData) = "List"
+  noOutlierData = dataList[[2]]
+  names(yesOutlierData) = "List"
+  
+  if(outlierBoolean){
+    dataUsed = dataList[[1]]
+    if(identical(dataList[[1]],dataList[[2]])){
+      outlierString = "No Outliers In Dataset"
+    }else{
+      outlierString = "Outliers Included"
+    }
+  }else{
+    if(identical(dataList[[1]],dataList[[2]])){
+      message("No Outliers in Dataset")
+      return()
+    }else{
+      dataUsed = dataList[[2]]
+      outlierString = "Outliers Excluded"
+    }
+  }
+  
+  cat2SpecNumPlot = plotDataLinear(dataUsed$twoCategory, print = printSubplots)
+  cat3SpecNumPlot = plotDataLinear(dataUsed$threeCategory, print = printSubplots)
+  cat4SpecNumPlot = plotDataLinear(dataUsed$fourCategory, print = printSubplots)
+  if(!nrow(dataUsed$fiveCategory)==0){cat5SpecNumPlot = plotDataLinear(dataUsed$fiveCategory, print = printSubplots)}else{cat5SpecNumPlot = NULL}
+  if(!nrow(dataUsed$sixCategory)==0){cat6SpecNumPlot = plotDataLinear(dataUsed$sixCategory, print = printSubplots)}else{cat6SpecNumPlot = NULL}
+  
+  catEffectPlot = categoryEffectPlot(dataList, printSubplots = F, includeOutlierPlot = F)
+  
+  
+  gridplot = arrangeGrob(cat2SpecNumPlot, cat3SpecNumPlot, cat4SpecNumPlot, cat5SpecNumPlot, cat6SpecNumPlot, catEffectPlot, nrow =2, ncol = 3)
+  titleGrob = textGrob(paste(dataListName, outlierString), gp = gpar(fontface = "bold", fontsize = 16))
+  finalPlot = grid.arrange(titleGrob, gridplot, ncol = 1, heights = c(1, 10))
+  print(finalPlot)
+  return(finalPlot)
+}
+
+
 
 
 
@@ -428,7 +500,7 @@ getCatgeoryMeans = function(meansSet, outlierInclusion = F){
 
 
 dataframeTimes(SYM20Times, "SYM20")
-dataframeTimes(SYM10Times, "SYM10")
+dataframeTimes(SYM10Times, "SYM10", recursive = T)
 dataframeTimes(SYM5Times, "SYM5")
 dataframeTimes(SYM0Times, "SYM0")
 
@@ -436,18 +508,24 @@ dataframeTimes(SYM0Times, "SYM0")
 
 
 
-SYM20SpPlots = speciesTimePlot(SYM20DataList, T)
+SYM20SpPlots = speciesTimePlot(SYM20DataList, F)
 speciesTimePlot(SYM20DataList, F)
-SYM10SpPlots = speciesTimePlot(SYM10DataList, T)
+SYM10SpPlots = speciesTimePlot(SYM10DataList, F)
 speciesTimePlot(SYM10DataList, F)
 SYM5SpPlots = speciesTimePlot(SYM5DataList, T)
 SYM0SpPlots = speciesTimePlot(SYM0DataList, T)
 
 
-categoryEffectPlot(SYM20DataList)
-categoryEffectPlot(SYM10DataList)
-categoryEffectPlot(SYM5DataList)
-categoryEffectPlot(SYM0DataList)
+SYM10Figure = speciesAndCategroyTimePlot(SYM10DataList, F)
+
+
+
+catEff20 = categoryEffectPlot(SYM20DataList)
+catEff10 =categoryEffectPlot(SYM10DataList)
+catEff5 =categoryEffectPlot(SYM5DataList)
+catEff0 =categoryEffectPlot(SYM0DataList)
+grid.arrange(catEff20, catEff10, catEff5, catEff0, nrow =2)
+
 
 
 dataListSet = list(SYM20DataList, SYM10DataList, SYM5DataList, SYM0DataList)
