@@ -325,12 +325,21 @@ dev.off()
 
 # --- UNIQUE TO THIS SCRIPT -----
 # -- direct category comparisons -- 
+
+
 orderAnamgrams = function(inString){
   paste(sort(strsplit(inString, NULL)[[1]]), collapse = "")
 }
 
-phenoTypes = unique(allCategory$phen)
 
+dataCatCompareInUse = SYM10DataList
+dataListName = "SYM10"
+
+
+
+allCategory = dataCatCompareInUse$yesOutlier$allCategory
+allCategoryNoOutliers = dataCatCompareInUse$noOutlier$allCategory
+phenoTypes = unique(allCategory$phen)
 
 unmergedPhenotypes = NULL
 mergedAndUnmergedPhenotypes = NULL
@@ -419,6 +428,13 @@ mergePlot3 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)=
 mergePlot4 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==4,], xAxis = "mergeNames", colorVar = "categoryChar")
 mergePlot5 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==5,], xAxis = "mergeNames", colorVar = "categoryChar")
 
+outlierString = "Outliers Included"
+gridplot = arrangeGrob(mergePlot2, mergePlot3, mergePlot4, mergePlot5, nrow =2)
+titleGrob = textGrob(paste(dataListName, outlierString), gp = gpar(fontface = "bold", fontsize = 16))
+finalPlot = grid.arrange(titleGrob, gridplot, ncol = 1, heights = c(0.5, 10))
+print(finalPlot)
+
+
 plot_grid(mergePlot2, mergePlot3, mergePlot4, mergePlot5, nrow = 2, labels = c(relaxationLevel,relaxationLevel,relaxationLevel,relaxationLevel), label_size = 10, hjust = -1.5)
 
 mergePlotNoOL2 = plotDataSimple(mergeUnmergeDataNoOutliers[nchar(mergeUnmergeDataNoOutliers$mergeNames)==2,], xAxis = "mergeNames", colorVar = "categoryChar")
@@ -458,6 +474,13 @@ mean(combo5$diffPercent)
 sd(combo5$diffPercent)
 mean(combo5$diffPercent[combo5$ComboPhen == "M"])
 mean(combo5$diffPercent[combo5$ComboPhen == "G"])
+
+combo5 = comboComparisions[which(comboComparisions$categoryNumber ==5),][c(-3, -10),]
+mean(combo5$diffPercent)
+sd(combo5$diffPercent)
+
+
+
 
 mean(c(combo5$diffPercent[combo5$ComboPhen == "M"][-3], combo5$diffPercent[combo5$ComboPhen == "G"][-5]))
 sd(c(combo5$diffPercent[combo5$ComboPhen == "M"][-3], combo5$diffPercent[combo5$ComboPhen == "G"][-5]))
@@ -573,39 +596,64 @@ calculateAverages = function(inData, relaxationLevel){
 }
 
 
-  letterInUse = comboletters[i]
-  replacementInUse = replaceLetters[i]
-  currentComboPhens = phenoTypes[grep(letterInUse, phenoTypes)]
-  decomboedPhens = sub(letterInUse, replacementInUse, currentComboPhens)
-  for(j in 1:length(currentComboPhens)){
-    comboPhen = currentComboPhens[j]
-    comboData = allCategory[allCategory$phen == comboPhen,]
-    comboAverage = mean(comboData$time)
-    comboSD = sd(comboData$time)
-    
-    decomboedPhenInput = decomboedPhens[j]
-    categoryNumber = nchar(decomboedPhenInput)
-    possibleDecomboPhens = phenoTypes[grep(orderAnamgrams(decomboedPhenInput), sapply(phenoTypes, orderAnamgrams ))]
-    decomboPhenOutput = possibleDecomboPhens[which(nchar(possibleDecomboPhens) == categoryNumber)]
-    
-    decomboedData = allCategory[allCategory$phen == decomboPhenOutput,]
-    deComboAverage = mean(decomboedData$time)
-    deComboSD = sd(decomboedData$time)
-    
-    timeDifference = deComboAverage - comboAverage 
-    diffPercent = ((deComboAverage - comboAverage) / comboAverage) * 100
-    
-    ComboPhen = letterInUse
-    
-    output = data.frame(categoryNumber, ComboPhen, comboSD, deComboSD, comboAverage, deComboAverage, timeDifference, diffPercent)
-    rownames(output) = paste(comboPhen, "/", decomboPhenOutput, sep="")
-    comboComparisions = rbind(comboComparisions, output)
-    
-    names(decomboPhenOutput) = comboPhen
-    names(comboPhen) = comboPhen
-    unmergedPhenotypes = append(unmergedPhenotypes, decomboPhenOutput)
-    mergedAndUnmergedPhenotypes = append(mergedAndUnmergedPhenotypes, comboPhen)
-    mergedAndUnmergedPhenotypes = append(mergedAndUnmergedPhenotypes, decomboPhenOutput)
-  }
+letterInUse = comboletters[i]
+replacementInUse = replaceLetters[i]
+currentComboPhens = phenoTypes[grep(letterInUse, phenoTypes)]
+decomboedPhens = sub(letterInUse, replacementInUse, currentComboPhens)
+for(j in 1:length(currentComboPhens)){
+  comboPhen = currentComboPhens[j]
+  comboData = allCategory[allCategory$phen == comboPhen,]
+  comboAverage = mean(comboData$time)
+  comboSD = sd(comboData$time)
+  
+  decomboedPhenInput = decomboedPhens[j]
+  categoryNumber = nchar(decomboedPhenInput)
+  possibleDecomboPhens = phenoTypes[grep(orderAnamgrams(decomboedPhenInput), sapply(phenoTypes, orderAnamgrams ))]
+  decomboPhenOutput = possibleDecomboPhens[which(nchar(possibleDecomboPhens) == categoryNumber)]
+  
+  decomboedData = allCategory[allCategory$phen == decomboPhenOutput,]
+  deComboAverage = mean(decomboedData$time)
+  deComboSD = sd(decomboedData$time)
+  
+  timeDifference = deComboAverage - comboAverage 
+  diffPercent = ((deComboAverage - comboAverage) / comboAverage) * 100
+  
+  ComboPhen = letterInUse
+  
+  output = data.frame(categoryNumber, ComboPhen, comboSD, deComboSD, comboAverage, deComboAverage, timeDifference, diffPercent)
+  rownames(output) = paste(comboPhen, "/", decomboPhenOutput, sep="")
+  comboComparisions = rbind(comboComparisions, output)
+  
+  names(decomboPhenOutput) = comboPhen
+  names(comboPhen) = comboPhen
+  unmergedPhenotypes = append(unmergedPhenotypes, decomboPhenOutput)
+  mergedAndUnmergedPhenotypes = append(mergedAndUnmergedPhenotypes, comboPhen)
+  mergedAndUnmergedPhenotypes = append(mergedAndUnmergedPhenotypes, decomboPhenOutput)
 }
+
+
+
+
+
+# ---------------- Permualtions Accuracy level -----------------
+
+IPCUnrelaxed = readRDS("Data/PermulationsAccuracy/IPCUnRelaxTestPermulationsPValueCorrelations.rds")
+IPCrelaxed = readRDS("Data/PermulationsAccuracy/IPCRelaxTestPermulationsPValueCorrelations.rds")
+HMGUnrelaxed = readRDS("Data/PermulationsAccuracy/HMGUnRelaxTestPermulationsPValueCorrelations.rds")
+HMGrelaxed = readRDS("Data/PermulationsAccuracy/HMGRelaxTestPermulationsPValueCorrelations.rds")
+
+
+IPCUnrelaxedOverall = IPCUnrelaxed[[1]]
+IPCrelaxedOverall = IPCrelaxed[[1]]
+HMGUnrelaxedOverall = HMGUnrelaxed[[1]]
+HMGrelaxedOverall = HMGrelaxed[[1]]
+
+all.equal(IPCUnrelaxedOverall, IPCrelaxedOverall) # There are more NAs in the unrelaxed than the relaxed
+IPCrelaxedOverall[which(is.na(IPCUnrelaxedOverall$Rho)),] = NA
+all.equal(IPCUnrelaxedOverall, IPCrelaxedOverall)
+
+all.equal(IPCUnrelaxed, IPCrelaxed)
+all.equal(IPCUnrelaxed[[1]], IPCrelaxed[[1]])
+all.equal(HMGUnrelaxed, HMGrelaxed)  
+  
 
