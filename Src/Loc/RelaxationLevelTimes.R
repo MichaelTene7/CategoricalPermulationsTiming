@@ -486,15 +486,132 @@ getCatgeoryMeans = function(meansSet, outlierInclusion = F){
   }
   output
 }
+
+
+
+
+
   
- 
+# --- Direct category comparison ---- 
+
+getRightDecombo = function(x){  
+  output = phenotypes[grep(orderAnamgrams(x), sapply(phenotypes, orderAnamgrams ))]
+  output = output[which(nchar(output) == nchar(x))]
+}
+
+getCombinationLinks = function(comboLetterSet = comboletters, replaceLetterSet = replaceLetters, phenotypes = uniquePhens){
+  linkList= NULL 
+  for (i in 1:length(comboLetterSet)) {
+    letterInUse = comboLetterSet[i]
+    replacementInUse = replaceLetters[i]
+    currentComboPhens = phenotypes[grep(letterInUse, phenotypes)]
+    decomboedPhens = sub(letterInUse, replacementInUse, currentComboPhens)
+    
+
+    
+    links = sapply(decomboedPhens, getRightDecombo)
+    names(links) = currentComboPhens
+    linkList = append(linkList, links)
+  }
+  linkList
+}
+comboLinks = getCombinationLinks()
+
+getDoubleCombinationLinks = function(comboLetterSet = comboletters, replaceLetterSet = replaceLetters, phenotypes = uniquePhens){
+  linkList= NULL 
+
+  lettersInUse = paste(comboLetterSet, collapse = "")
+  replacementsInUse = paste(replaceLetterSet, collapse = "")
+  currentComboPhens = phenotypes[grep(lettersInUse, phenotypes)]
+  decomboedPhens = sub(lettersInUse, replacementsInUse, currentComboPhens)
+    
+  links = sapply(decomboedPhens, getRightDecombo)
+  names(links) = currentComboPhens
+  links
+}
+doubleComboLinks = getDoubleCombinationLinks()
+
+
+
+
+
+mergeComparison = function(meansSet, outlierInclusion = F, comboLinkSet = comboLinks, comboLetterSet = comboletters, addspacer=F, outlierHard = T){
+  output = NULL
+  for(i in unique(meansSet$relaxLevelNumeric)){
+    currentRows = meansSet[meansSet$relaxLevelNumeric ==i,]
+    #message(i)
+    for(j in 1:length(comboLinkSet)){
+      #message(j)
+      currentCombo = comboLinkSet[j]
+      
+      unmergedRow = currentRows[currentRows$phen == currentCombo,]
+      mergedRow = currentRows[currentRows$phen == names(currentCombo),]
+      
+      mergeNumber = nchar(currentCombo)
+      mergePhen = intersect(strsplit(names(currentCombo), NULL)[[1]], comboLetterSet)
+      if(length(mergePhen) ==2){
+        mergePhen = mergePhen[which(!mergePhen %in% intersect(strsplit(currentCombo, NULL)[[1]], comboLetterSet))]
+        if(length(mergePhen) ==2){
+          mergePhen = paste(mergePhen, collapse = "")
+          
+        }
+      }
+      relaxLevel = i 
+      isOutlier = any(unmergedRow$isOutlier, mergedRow$isOutlier)
+      
+      #message(currentCombo)
+      #message(currentRows[currentRows$phen == currentCombo,])
+      
+      Mean_Unmerged = unmergedRow$Mean
+      Sd_unmerged = unmergedRow$Sd
+      Mean_Merged = mergedRow$Mean
+      Sd_Merged = mergedRow$Sd
+      
+      mergeDifference = Mean_Unmerged - Mean_Merged
+      percentDiffernce = mergeDifference / Mean_Merged *100
+      
+      mergeName = paste(names(currentCombo), "/", currentCombo, sep="")
+      
+      #message(paste(mergeName, mergeNumber, mergePhen, relaxLevel, isOutlier, Mean_Unmerged, Mean_Merged, Sd_unmerged, Sd_Merged, mergeDifference, percentDiffernce, sep=" | "))
+      
+      outRow = data.frame(mergeName, mergeNumber, mergePhen, relaxLevel, isOutlier, Mean_Unmerged, Mean_Merged, Sd_unmerged, Sd_Merged, mergeDifference, percentDiffernce)
+      rownames(outRow) = mergeName
+      output = rbind(output, outRow)
+    }
+    if(addspacer){output = rbind(output, rep(NA, ncol(output)))}
+    #output = rbind(rep(NA, ncol(output)), output)
+    #rownames(output)[1] = paste("RelaxationLevel", i, sep="")
+  }
+  if(!outlierInclusion){
+    output = output[output$isOutlier == F,]
+    if(outlierHard){output = output[-which(output$percentDiffernce > 10000),]}
+  }
   
-  
+  output
+}
+
+doubleMergeResults = mergeComparison(phenotypeTimeMeans, outlierInclusion = F, comboLinkSet = doubleComboLinks, outlierHard = F)
 
 
 
-
-
+mergeAverages = function(mergeCompareSet, offset =1){
+  output = NULL
+  for (i in unique(mergeCompareSet$relaxLevel)){
+    currentRows = mergeCompareSet[mergeCompareSet$relaxLevel == i,]  
+    for(j in unique(currentRows$mergeNumber)){
+      currentNumber = j
+      instanceRows = currentRows[currentRows$mergeNumber == currentNumber,]
+      comparison = paste(currentNumber,"v", (currentNumber-offset), sep="")
+      
+      meanDifference = mean(instanceRows$percentDiffernce, na.rm = T)
+      sdDifference = sd(instanceRows$percentDiffernce, na.rm = T)
+      
+      outputRow = data.frame(i, comparison, meanDifference, sdDifference)
+      output = rbind(output, outputRow)
+    }
+  }
+  output
+}
 
 
 
@@ -540,6 +657,31 @@ getCatgeoryMeans(phenotypeTimeMeans, outlierInclusion = T)
 
 
 
+mergeResults = mergeComparison(phenotypeTimeMeans, outlierInclusion = F)
+mergeResultsOutliers = mergeComparison(phenotypeTimeMeans, outlierInclusion = T)
+mergeNoOutliers = mergeAverages(mergeResults)
+mergewithOutliers = mergeAverages(mergeResultsOutliers)
+colnames(mergewithOutliers) = paste("OL", colnames(mergewithOutliers),  sep="")
+mergeFindings = cbind(mergeNoOutliers, mergewithOutliers[c(3,4)])
+
+
+doubleMergeResults = mergeComparison(phenotypeTimeMeans, outlierInclusion = F, comboLinkSet = doubleComboLinks, outlierHard = F)
+doubleMergeResultsOutliers = mergeComparison(phenotypeTimeMeans, outlierInclusion = T, comboLinkSet = doubleComboLinks, outlierHard = F)
+doubleMergeNoOutliers = mergeAverages(doubleMergeResults, 2)
+doubleMergewithOutliers = mergeAverages(doubleMergeResultsOutliers, 2)
+colnames(doubleMergewithOutliers) = paste("OL", colnames(doubleMergewithOutliers),  sep="")
+doubleMergeFindings = cbind(doubleMergeNoOutliers, doubleMergewithOutliers[c(3,4)])
+
+all.equal(doubleMergeResults, doubleMergeResultsOutliers)
+
+
+
+
+
+
+
+
+
 
 # -- file output code -- 
 a = b #prevent accidental running 
@@ -580,6 +722,29 @@ allCategorywideMeans = rbind(catMeansNoOutliers, catMeansYesOutliers)
 
 catMeansFilename = paste("Output/Analysis/RelaxationEffectTable.csv")
 write.csv(allCategorywideMeans, catMeansFilename)
+
+
+# - Merge Comparisons table -
+mergeResults = mergeComparison(phenotypeTimeMeans, outlierInclusion = F)
+mergeResultsOutliers = mergeComparison(phenotypeTimeMeans, outlierInclusion = T)
+mergeNoOutliers = mergeAverages(mergeResults)
+mergewithOutliers = mergeAverages(mergeResultsOutliers)
+colnames(mergewithOutliers) = paste("OL", colnames(mergewithOutliers),  sep="")
+singlemergeFindings = cbind(mergeNoOutliers, mergewithOutliers[c(3,4)])
+
+doubleMergeResults = mergeComparison(phenotypeTimeMeans, outlierInclusion = F, comboLinkSet = doubleComboLinks, outlierHard = F)
+doubleMergeResultsOutliers = mergeComparison(phenotypeTimeMeans, outlierInclusion = T, comboLinkSet = doubleComboLinks, outlierHard = F)
+doubleMergeNoOutliers = mergeAverages(doubleMergeResults, 2)
+doubleMergewithOutliers = mergeAverages(doubleMergeResultsOutliers, 2)
+colnames(doubleMergewithOutliers) = paste("OL", colnames(doubleMergewithOutliers),  sep="")
+doubleMergeFindings = cbind(doubleMergeNoOutliers, doubleMergewithOutliers[c(3,4)])
+
+all.equal(doubleMergeResults, doubleMergeResultsOutliers)
+
+mergeFindings = rbind(rep("Single",6), singlemergeFindings, rep("Double",6), doubleMergeFindings)
+
+mergeTableFilename = paste("Output/Analysis/MergeEffectTable.csv")
+write.csv(mergeFindings, mergeTableFilename)
 
 
 # -- debug code ---
