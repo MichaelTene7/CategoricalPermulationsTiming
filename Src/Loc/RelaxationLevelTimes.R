@@ -202,15 +202,25 @@ dataframeTimes = function(inUseTimes, prefix, recursive = T){
 
 # --- plotting functions ---
 {
+  
+mainTheme = theme(
+  axis.text=element_text(size=14),
+  axis.title=element_text(size=16,face="bold"),
+  plot.title = element_text(size=18),
+  legend.text = element_text(size=10),
+  legend.title = element_text(size=16)
+)
 # -- core plotting function -- 
 
 plotDataSimple = function(dataSet, xAxis = "speciesNum", yAxis = "time", colorVar = "phen"){
   dataName = deparse(substitute(dataSet))
   message(dataName)
   plot1 = ggplot(dataSet, aes_string(x = xAxis, y = yAxis)) +
-    geom_point(aes_string(color = colorVar))
+    geom_point(aes_string(color = colorVar))+
+    mainTheme
   print(plot1)
 }  
+
   
   
   
@@ -218,11 +228,12 @@ plotLM = function(dataSet, dataName, xAxis = "speciesNum", yAxis = "time", color
   linearModel = lm(modelType, data = dataSet)
   plot = ggplot(dataSet, aes_string(x = xAxis, y = yAxis)) +
     geom_point(aes_string(color = colorVar))+
-    labs(title = paste(dataName))+
+    labs(title = paste(dataName), color = "Phenotype Set", x = "Number of Species", y = "Time (s)")+
+    mainTheme+
     geom_smooth(method = "lm", show.legend = F)+
     if(!is.na(coef(linearModel)[2])){
       annotate("text",
-               x = min(dataSet[,xAxis]+ ((max(dataSet[,xAxis]) - min(dataSet[,xAxis]))/4)), y = max(dataSet[, yAxis]), 
+               x = min(dataSet[,xAxis]*1.2+ ((max(dataSet[,xAxis]) - min(dataSet[,xAxis]))/4)), y = max(dataSet[, yAxis]), 
                label = paste(
                  "y =", 
                  round(coef(linearModel)[2], 2), 
@@ -255,10 +266,11 @@ plotDataExponential = function(dataSet, graphTitle, print = F){
   linearModel = lm(time ~ exp(categoryNumber), data = dataSet)
   plot1 = ggplot(dataSet, aes(x = categoryNumber, y = time)) +
     geom_point(aes_string(color = colorVar))+
-    labs(title = graphTitle)+
+    labs(title = graphTitle, color = "Category Number", y = "Time (s)")+
     geom_smooth(method = "gam", formula = (y ~ exp(x)), show.legend = F)+
+    mainTheme+
     annotate("text",
-             x = min(dataSet[,xAxis]+ ((max(dataSet[,xAxis]) - min(dataSet[,xAxis]))/4)), y = max(dataSet[, yAxis]), 
+             x = min(dataSet[,xAxis]*1.2+ ((max(dataSet[,xAxis]) - min(dataSet[,xAxis]))/4)), y = max(dataSet[, yAxis]), 
              label = paste(
                "y = x^", 
                round(coef(linearModel)[2], 2), 
@@ -307,7 +319,7 @@ if(!nrow(dataUsed$fiveCategory)==0){cat5SpecNumPlot = plotDataLinear(dataUsed$fi
 if(!nrow(dataUsed$sixCategory)==0){cat6SpecNumPlot = plotDataLinear(dataUsed$sixCategory, print = printSubplots)}else{cat6SpecNumPlot = NULL}
 
 gridplot = arrangeGrob(cat2SpecNumPlot, cat3SpecNumPlot, cat4SpecNumPlot, cat5SpecNumPlot, cat6SpecNumPlot, nrow =2, ncol = 3)
-titleGrob = textGrob(paste(dataListName, outlierString), gp = gpar(fontface = "bold", fontsize = 16))
+titleGrob = textGrob(paste(dataListName, outlierString), gp = gpar(fontface = "bold", fontsize = 20))
 finalPlot = grid.arrange(titleGrob, gridplot, ncol = 1, heights = c(1, 10))
 print(finalPlot)
 return(finalPlot)
@@ -326,7 +338,7 @@ categoryEffectPlot = function(dataList, printSubplots = F, includeOutlierPlot = 
   catEffectPlotNoOutlier = plotDataExponential(dataList[[2]]$allCategory, "Outliers Excluded", printSubplots)
   catEffectPlotOutlier = plotDataExponential(dataList[[1]]$allCategory, "Outliers Included", printSubplots)
   gridplot = arrangeGrob(catEffectPlotOutlier, catEffectPlotNoOutlier, nrow =1)
-  titleGrob = textGrob(paste(dataListName), gp = gpar(fontface = "bold", fontsize = 16))
+  titleGrob = textGrob(paste(dataListName), gp = gpar(fontface = "bold", fontsize = 20))
   finalPlot = grid.arrange(titleGrob, gridplot, ncol = 1, heights = c(1, 10))
   print(finalPlot)
   return(finalPlot)
@@ -345,8 +357,10 @@ plotDataRelax = function(dataSet, xAxis = "phen", yAxis = "Mean", colorVar = "re
   message(dataName)
   plot1 = ggplot(dataSet, aes_string(x = xAxis, y = yAxis)) +
     geom_point(aes_string(color = colorVar))+
-    labs(title = title)+
-    scale_color_manual(values = c("0" = "red", "5" = "orange", "10" = "cyan", "20"= "blue"), limits = c("0", "5", "10", "20"))
+    labs(title = title, y = "Mean time (s)")+
+    scale_color_manual(values = c("0" = "red", "5" = "orange", "10" = "cyan", "20"= "blue"), limits = c("0", "5", "10", "20"))+
+    mainTheme +
+    theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))
     #scale_color_gradient2(high = "blue", mid = "yellow", low = "red")
   if(print){print(plot1)}
 }  
@@ -408,7 +422,7 @@ speciesAndCategroyTimePlot = function(dataList, outlierBoolean, printSubplots = 
   
   
   gridplot = arrangeGrob(cat2SpecNumPlot, cat3SpecNumPlot, cat4SpecNumPlot, cat5SpecNumPlot, cat6SpecNumPlot, catEffectPlot, nrow =2, ncol = 3)
-  titleGrob = textGrob(paste(dataListName, outlierString), gp = gpar(fontface = "bold", fontsize = 16))
+  titleGrob = textGrob(paste(dataListName, outlierString), gp = gpar(fontface = "bold", fontsize = 20))
   finalPlot = grid.arrange(titleGrob, gridplot, ncol = 1, heights = c(1, 10))
   print(finalPlot)
   return(finalPlot)
@@ -493,6 +507,11 @@ getCatgeoryMeans = function(meansSet, outlierInclusion = F){
 
   
 # --- Direct category comparison ---- 
+
+orderAnamgrams = function(inString){
+  paste(sort(strsplit(inString, NULL)[[1]]), collapse = "")
+}
+
 
 getRightDecombo = function(x){  
   output = phenotypes[grep(orderAnamgrams(x), sapply(phenotypes, orderAnamgrams ))]
@@ -590,7 +609,7 @@ mergeComparison = function(meansSet, outlierInclusion = F, comboLinkSet = comboL
   output
 }
 
-doubleMergeResults = mergeComparison(phenotypeTimeMeans, outlierInclusion = F, comboLinkSet = doubleComboLinks, outlierHard = F)
+#doubleMergeResults = mergeComparison(phenotypeTimeMeans, outlierInclusion = F, comboLinkSet = doubleComboLinks, outlierHard = F)
 
 
 
@@ -641,7 +660,7 @@ catEff20 = categoryEffectPlot(SYM20DataList)
 catEff10 =categoryEffectPlot(SYM10DataList)
 catEff5 =categoryEffectPlot(SYM5DataList)
 catEff0 =categoryEffectPlot(SYM0DataList)
-grid.arrange(catEff20, catEff10, catEff5, catEff0, nrow =2)
+grid.arrange(catEff20, catEff10, catEff5, catEff0, nrow =4)
 
 
 

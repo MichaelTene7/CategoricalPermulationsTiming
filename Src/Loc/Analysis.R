@@ -406,31 +406,23 @@ mergeUnmergeDataNoOutliers$mergeNames = mergeNames
 
 
 
-plotDataSimple = function(dataSet, xAxis = "speciesNum", yAxis = "time", colorVar = "phen", modelType = "lm"){
+plotDataSimple2 = function(dataSet, xAxis = "speciesNum", yAxis = "time", colorVar = "phen"){
   dataName = deparse(substitute(dataSet))
   message(dataName)
-  #linearModel = lm(paste(yAxis, "~", xAxis), data = dataSet)
   plot1 = ggplot(dataSet, aes_string(x = xAxis, y = yAxis)) +
-    geom_point(aes_string(color = colorVar))
+    geom_point(aes_string(color = colorVar))+
+    mainTheme+
+    labs(color = "Category #", y = "Time (s)", x = "Merged Phenotype Set")
   print(plot1)
-  
-  #dataNoOutliersName = paste(dataName, "NoOutliers", sep='')
-  #dataNoOutliers = get(dataNoOutliersName)
-  #if(!nrow(dataSet) == nrow(dataNoOutliers)){
-  #  plot2 = ggplot(dataNoOutliers, aes_string(x = xAxis, y = yAxis)) +
-  #    geom_point(aes_string(color = colorVar))+
-  #    labs(title = dataNoOutliersName)+
-  #  print(plot2)
-  #}
-}
-mergePlot2 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==2,], xAxis = "mergeNames", colorVar = "categoryChar")
-mergePlot3 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==3,], xAxis = "mergeNames", colorVar = "categoryChar")
-mergePlot4 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==4,], xAxis = "mergeNames", colorVar = "categoryChar")
-mergePlot5 = plotDataSimple(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==5,], xAxis = "mergeNames", colorVar = "categoryChar")
+} 
+mergePlot2 = plotDataSimple2(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==2,], xAxis = "mergeNames", colorVar = "categoryChar")
+mergePlot3 = plotDataSimple2(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==3,], xAxis = "mergeNames", colorVar = "categoryChar")
+mergePlot4 = plotDataSimple2(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==4,], xAxis = "mergeNames", colorVar = "categoryChar")
+mergePlot5 = plotDataSimple2(mergeUnmergeData[nchar(mergeUnmergeData$mergeNames)==5,], xAxis = "mergeNames", colorVar = "categoryChar")
 
 outlierString = "Outliers Included"
 gridplot = arrangeGrob(mergePlot2, mergePlot3, mergePlot4, mergePlot5, nrow =2)
-titleGrob = textGrob(paste(dataListName, outlierString), gp = gpar(fontface = "bold", fontsize = 16))
+titleGrob = textGrob(paste(dataListName, outlierString), gp = gpar(fontface = "bold", fontsize = 20))
 finalPlot = grid.arrange(titleGrob, gridplot, ncol = 1, heights = c(0.5, 10))
 print(finalPlot)
 
