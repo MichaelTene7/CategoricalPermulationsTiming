@@ -1,0 +1,121 @@
+,Hiller,Zoonomia,common,scientific,phenotype
+1,hg38,REFERENCE,Human,homo_sapiens,Generalist
+2,panTro5,vs_panTro6,Chimp,pan_troglodytes,Omnivore
+3,panPan2,vs_panPan3,Bonobo,pan_paniscus,Omnivore
+4,gorGor5,vs_gorGor6,Gorilla,gorilla_gorilla_gorilla,Herbivore
+5,ponAbe2,vs_ponAbe3,Orangutan,pongo_abelii,Omnivore
+6,nomLeu3,vs_HLnomLeu4,Gibbon,nomascus_leucogenys,Herbivore
+7,rheMac8,vs_rheMac10,Rhesus Macaca,macaca_mulatta,Omnivore
+8,macFas5,vs_HLmacFas6,Crab-eating macaque,macaca_fascicularis,Omnivore
+9,macNem1,vs_macNem1,Southern Pig-tailed Macaca,macaca_nemestrina,Omnivore
+10,papAnu3,vs_HLpapAnu5,Olive Baboon,papio_anubis,Generalist
+11,manLeu1,vs_manLeu1,Drill,mandrillus_leucophaeus,Omnivore
+12,cerAty1,vs_cerAty1,Sooty Mangabey,cercocebus_atys,Omnivore
+13,chlSab2,vs_chlSab2,Green monkey,chlorocebus_sabaeus,Omnivore
+14,nasLar1,vs_nasLar1,Proboscis Monkey,nasalis_larvatus,Herbivore
+15,rhiRox1,vs_HLrhiRox2,Snub-nosed Langur ,rhinopithecus_roxellana,Herbivore
+16,rhiBie1,vs_rhiBie1,Snub-nosed Langur ,rhinopithecus_bieti,Herbivore
+17,colAng1,vs_colAng1,Black-and-white Colobus Monkey,colobus_angolensis_palliatus,Herbivore
+18,HLpilTep1,vs_HLpilTep2,Red Colobus Monkey,piliocolobus_tephrosceles,Herbivore
+19,calJac3,vs_HLcalJac4,Marmoset,callithrix_jacchus,Omnivore
+20,aotNan1,vs_aotNan1,Night Monkey,aotus_nancymaae,Omnivore
+21,saiBol1,vs_HLsaiBol1,Squirrel monkey,saimiri_boliviensis,Omnivore
+22,cebCap1,vs_cebCap1,Ring-tailed Monkey,cebus_capucinus_imitator,Omnivore/Generalist
+23,tarSyr2,NA,NA,carlito_syrichta,Insectivore
+24,otoGar3,vs_otoGar3,Bushbaby,otolemur_garnettii,Herbivore
+25,micMur3,vs_micMur3,Mouse Lemur,microcebus_murinus,Omnivore
+26,proCoq1,vs_proCoq1,Sifakas,propithecus_coquereli,Herbivore
+27,galVar1,NA,NA,galeopterus_variegatus,Herbivore
+28,tupChi1,vs_tupChi1,Chinese tree shrew,tupaia_chinensis,Ambiguous
+29,jacJac1,vs_jacJac1,Lesser Egyptian jerboa,jaculus_jaculus,Herbivore
+30,micOch1,vs_micOch1,Prairie vole,microtus_ochrogaster,Herbivore
+31,criGri1,vs_HLcriGri3,Chinese hamster,cricetulus_griseus,Herbivore
+32,mesAur1,vs_mesAur1,Golden hamster,mesocricetus_auratus,Omnivore
+33,perManBai1,vs_HLperManBai2,Deer mouse,peromyscus_maniculatus_bairdii,Omnivore
+34,mm10,vs_HLammLer1,Aoudad,ammotragus_lervia,Herbivore
+35,HLmusCar1,vs_HLmusCar1,Ryukyu mouse,mus_caroli,Generalist
+36,HLmusPah1,vs_HLmusPah1,Gairdner's shrewmouse,mus_pahari,Generalist
+37,rn6,vs_HLratNor7,Rat,rattus_norvegicus,Generalist
+38,HLmerUng1,vs_HLmerUng1,Jird,meriones_unguiculatus,Herbivore
+39,nanGal1,vs_nanGal1,Mediterranean Blind Mole-rats,nannospalax_galili,Herbivore
+40,HLcasCan1,vs_HLcasCan3,Beaver,castor_canadensis,Herbivore
+41,HLdipOrd2,vs_dipOrd2,Ord Kangaroo Rat,dipodomys_ordii,Insectivore/herbivore
+42,hetGla2,vs_hetGla2,Naked mole-rat,heterocephalus_glaber,Herbivore
+43,HLfukDam1,vs_HLfukDam2,Damara mole rat,fukomys_damarensis,Insectivore/Herbivore
+44,cavPor3,vs_cavPor3,Domestic guinea pig,cavia_porcellus,Herbivore
+45,chiLan1,vs_chiLan1,Chinchilla,chinchilla_lanigera,Herbivore
+46,octDeg1,vs_octDeg1,Brush-tailed rat,octodon_degus,Herbivore
+47,speTri2,vs_speTri2,Ground Squirrel ,ictidomys_tridecemlineatus,Omnivore
+48,HLmarMar1,vs_HLmarMar1,Marmot,marmota_marmota_marmota,Insectivore/herbivore
+49,oryCun2,vs_HLoryCunCun4,Rabbit,oryctolagus_cuniculus,Herbivore
+50,ochPri3,vs_ochPri3,Pika,ochotona_princeps,Herbivore
+51,vicPac2,vs_vicPac2,Alpaca,vicugna_pacos,Herbivore
+52,HLcamFer2,vs_HLcamFer3,Ferus Camel,camelus_ferus,Omnivore
+53,HLcamBac1,vs_HLcamBac1,Bactrian Camel,camelus_bactrianus,Omnivore
+54,HLcamDro1,vs_HLcamDro2,One-hump Camel,camelus_dromedarius,Omnivore
+55,HLturTru3,vs_HLturTru4,Bottle-nose Dolphin,tursiops_truncatus,Piscivore
+56,HLorcOrc1,vs_orcOrc1,Killer whale,orcinus_orca,Carnivore/Piscivore
+57,HLdelLeu1,vs_HLdelLeu2,Beluga Whale,delphinapterus_leucas,Piscivore
+58,lipVex1,vs_lipVex1,Chinese River Dolphin,lipotes_vexillifer,Piscivore
+59,phyCat1,NA,NA,physeter_catodon,Piscivore
+60,balAcu1,vs_balAcu1,Minke Whale,balaenoptera_acutorostrata_scammoni,Carnivore/Planktivore
+61,HLbalMys1,NA,NA,balaena_mysticetus,Planktivore
+62,bosTau8,vs_bosTau9,Cow,bos_taurus,Herbivore
+63,HLbosInd1,vs_HLbosInd2,Zebu,bos_indicus,Herbivore
+64,bisBis1,vs_bisBis1,American Bison,bison_bison_bison,Herbivore
+65,bosMut1,vs_HLbosMut2,Yak,bos_mutus,Herbivore
+66,bubBub1,vs_HLbubBub2,Asian Water Buffalo,bubalus_bubalis,Herbivore
+67,HLoviAri4,vs_HLoviAri5,Domestic sheep,ovis_aries,Herbivore
+68,HLoviCan1,vs_HLoviCan1,Bighorn sheep,ovis_canadensis,Herbivore
+69,HLcapHir2,vs_HLcapHir2,Domestic goat,capra_hircus,Herbivore
+70,panHod1,vs_panHod1,Tibetan antelope,pantholops_hodgsonii,Herbivore
+71,HLodoVir1,vs_HLodoVir3,White-tailed Deer,odocoileus_virginianus,Herbivore
+72,HLcerEla1,NA,NA,cervus_elaphus_hippelaphus,NA
+73,susScr11,vs_susScr11,Pig,sus_scrofa,Generalist
+74,HLequCab3,vs_equCab3,Horse,equus_caballus,Herbivore
+75,equPrz1,vs_equPrz1,Przewalskii Horse,equus_przewalskii,Herbivore
+76,HLequAsi1,vs_HLequAsiAsi2,Wild Donkey,equus_asinus,Herbivore
+77,cerSim1,vs_HLcerSimCot1,White rhinoceros (Chad),ceratotherium_simum_cottoni,Herbivore
+78,felCat8,vs_felCat9,Cat,felis_catus,Carnivore
+79,HLaciJub1,vs_HLaciJub2,Cheetah,acinonyx_jubatus,Carnivore
+80,panTig1,vs_panTig1,Tiger,panthera_tigris_altaica,Carnivore
+81,HLpanPar1,vs_HLpanPar1,Leopard,panthera_pardus,Carnivore
+82,canFam3,vs_canFam4,Dog,canis_lupus_familiaris,Carnivore
+83,HLlycPic1,vs_HLlycPic3,African Hunting Dog ,lycaon_pictus,Carnivore
+84,musFur1,vs_HLmusFur2,Ferret,mustela_putorius_furo,Carnivore
+85,HLenhLut1,NA,NA,NA,NA
+86,HLailFul1,vs_HLailFul2,Red Panda ,ailurus_fulgens,Omnivore
+87,ailMel1,vs_HLailMel2,Panda,ailuropoda_melanoleuca,Omnivore
+88,ursMar1,vs_ursMar1,Polar Bear,ursus_maritimus,Carnivore
+89,odoRosDiv1,vs_HLodoRos1,Pacific walrus,odobenus_rosmarus_divergens,Piscivore
+90,lepWed1,vs_lepWed1,Weddell seal,leptonychotes_weddellii,Piscivore
+91,neoSch1,vs_neoSch1,Hawaiian Monk Seal,neomonachus_schauinslandi,Piscivore
+92,manPen1,vs_HLmanPen2,Chinese pangolin,manis_pentadactyla,Insectivore
+93,HLmanJav1,vs_HLmanJav2,Sunda pangolin,manis_javanica,Insectivore
+94,pteAle1,vs_pteAle1,Black flying-fox,pteropus_alecto,Herbivore
+95,HLpteVam2,vs_HLpteVam2,Megabat,pteropus_vampyrus,Herbivore
+96,rouAeg1,vs_HLrouAeg4,Rousette Fruit Bats,rousettus_aegyptiacus,Herbivore
+97,HLrhiSin1,vs_HLrhiSin1,Horseshoe Bats,rhinolophus_sinicus,Insectivore
+98,HLhipArm1,vs_HLhipArm1,Old World Leaf-nosed Bats,hipposideros_armiger,Insectivore
+99,eptFus1,vs_eptFus1,Big brown bat,eptesicus_fuscus,Insectivore
+100,myoDav1,vs_myoDav1,David's myotis bat,myotis_davidii,Insectivore
+101,myoBra1,vs_myoBra1,Brandt's bat,myotis_brandtii,Insectivore
+102,myoLuc2,vs_HLmyoLuc1,Microbat,myotis_lucifugus,Insectivore
+103,HLminNat1,vs_HLminNat1,Long-winged bats,miniopterus_natalensis,Insectivore
+104,HLdesRot1,vs_HLdesRot2,Common Vampire Bat,NA,Hematophagy
+105,eriEur2,vs_eriEur2,Hedgehog,erinaceus_europaeus,Generalist
+106,sorAra2,vs_sorAra2,Shrew,sorex_araneus,Omnivore
+107,conCri1,vs_conCri1,Star-nosed mole,condylura_cristata,Carnivore/Piscivore
+108,loxAfr3,vs_HLloxAfr4,Elephant,loxodonta_africana,Herbivore
+109,triMan1,vs_triMan1,Manatee,trichechus_manatus,Herbivore
+110,HLproCap2,vs_HLproCap3,Hydrax,procavia_capensis,Herbivore
+111,chrAsi1,vs_chrAsi1,Cape golden mole,chrysochloris_asiatica,Insectivore
+112,echTel2,NoZoonomiaName,Tenrec,echinops_telfairi,Ambiguous
+113,eleEdw1,vs_eleEdw1,Cape elephant shrew,elephantulus_edwardii,Insectivore
+114,oryAfe1,NoZoonomiaName,Aardvark,orycteropus_afer_afer,Insectivore
+115,dasNov3,vs_dasNov3,Armadillo,dasypus_novemcinctus,Insectivore/Carnivore
+116,HLchoHof2,NA,NA,choloepus_hoffmanni,Herbivore
+117,monDom5,NoZoonomiaName,Opossum,monodelphis_domestica,Omnivore
+118,sarHar1,NoZoonomiaName,Tasmanian devil,sarcophilus_harrisii,Omnivore
+119,HLphaCin1,NA,NA,phascolarctos_cinereus,Herbivore
+120,ornAna2,NoZoonomiaName,Platypus,ornithorhynchus_anatinus,Insectivore/Carnivore
