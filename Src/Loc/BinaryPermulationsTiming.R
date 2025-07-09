@@ -96,7 +96,7 @@ if(!is.na(cmdArgImport('i'))){
   paste("This script does not have a run instance value")
 }
 #Relaxation
-if(!is.na(cmdArgImport('l'))){
+if(!all(is.na(cmdArgImport('l')))){
   useRelaxation = TRUE
   relaxationValue = cmdArgImport('l')
   relaxationValue = as.numeric(relaxationValue)
