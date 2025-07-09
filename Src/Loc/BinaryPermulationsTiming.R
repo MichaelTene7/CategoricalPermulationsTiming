@@ -16,6 +16,9 @@ library(RERconverge)
 library(tools)
 source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/convertForegroundVector.R")
+source("Src/Reu/fast_bin_perm.R")
+source("Src/Reu/permPValCorReport.R")
+source("Src/Reu/GetPermsBinaryFudged.R")
 
 args = c('r=setupTest', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
 
@@ -144,8 +147,8 @@ if (file.exists(paste(speciesFilterFileName))){
   message("No speciesFilter arg, using all species")                           #if not, use no filter
 }
 #phenotypeVector
-phenotypeVectorFilename = paste(outputFolderName, filePrefix, "phenotypeVector.rds", sep="")
-if(file.exists(phenotypeVectorFilename = paste(outputFolderName, filePrefix, "phenotypeVector.rds", sep=""))){
+phenotypeVectorFilename = paste(outputFolderName, filePrefix, "PhenotypeVector.rds", sep="")
+if(file.exists(phenotypeVectorFilename = paste(outputFolderName, filePrefix, "PhenotypeVector.rds", sep=""))){
   phenotypeVector = readRDS(phenotypeVectorFilename)
 }else{
   stop("THIS IS AN ISSUE MESSAGE, GENERATE A PHENTOTYPEVECTOR")
@@ -294,8 +297,7 @@ danielPermulationPipeline= function(permulationAmount, message = F){
 #-------------------------
 #-- Daniel Fast Binary Permulations ---
 #-------------------------
-source("Src/Reu/fast_bin_perm.R")
-source("Src/Reu/PermPValCorReport.R")
+
 
 
 #Single-time setup
@@ -329,7 +331,7 @@ if(runDaniel){
 #-------------------------
 #-- BinaryPermulationsFudged ---
 #-------------------------
-source("Src/Reu/GetPermsBinaryFudged.R")
+
 
 #Convert percentage fudge to absolute fudge 
 foregroundSpecies = names(phenotypeVector)[which(phenotypeVector == 1)]
