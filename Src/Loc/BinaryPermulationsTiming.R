@@ -60,7 +60,7 @@ if(clusterRun)args = commandArgs(trailingOnly = TRUE)
 #-- Arugment Imports ---
 #-------------------------
 #defaults: 
-mainTreesLocation = "~/wym219_123121/shared/mit221/projects/RunRERBinaryMT/Data/zoonomiaAllMammalsTrees.rds"  #this is the standard location on Sol 
+mainTreesLocation = "../RunRERBinaryMT/Data/zoonomiaAllMammalsTrees.rds"  #this is the standard location on Sol 
 permulationAmount = 100
 runInstanceValue = NULL
 useRelaxation = FALSE
