@@ -309,7 +309,7 @@ danielPermulationPipeline= function(permulationAmount, message = F){
 
 categoricalPermulationPipline = function(message = F, permulationAmount){
   if(message){cat("Simulating Phenotype \n")}
-  simulationTime = suppressWarnings(system.time({permulationsData = categoricalPermulations(mainTrees, phenotypeVector, rm = modelType, rp = rootProbability, ntrees = permulationAmount, percent_relax = relaxationValue)}))
+  simulationTime = suppressWarnings(system.time({permulationsData = categoricalPermulations(mainTrees, phenotypeVector, rm = modelType, rp = rootProbability, ntrees = permulationAmount, percent_relax = currentRelaxation)}))
   if(message){cat("Total Simulation time: ", simulationTime["elapsed"], "\n")}
   categoricalSimulationTimes <<- append(categoricalSimulationTimes, simulationTime["elapsed"])
   
