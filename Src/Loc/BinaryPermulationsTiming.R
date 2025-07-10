@@ -14,11 +14,14 @@ if(clusterRun){.libPaths("/share/ceph/wym219group/shared/libraries/R4")} #add pa
 
 library(RERconverge)
 library(tools)
+library(data.table)
 source("Src/Reu/cmdArgImport.R")
 source("Src/Reu/convertForegroundVector.R")
 source("Src/Reu/fast_bin_perm.R")
 source("Src/Reu/permPValCorReport.R")
 source("Src/Reu/GetPermsBinaryFudged.R")
+source("Src/Reu/RelaxedRejectionPermFuncs2.R")
+source("Src/Reu/CategoricalPermulationsParallelFunctions.R")
 
 args = c('r=setupTest', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
 
@@ -71,11 +74,13 @@ relaxationValue = NULL
 rootSpeciesValue = "REFERENCE"
 runDaniel = T
 runFudged = T
+runCategorical = T
 
 #Settings without an arugment but centralized here 
 min.sp = 10
 min.pos = 2
-
+modelType = "ER"
+rootProbability = "auto"
 
 #MainTrees Location
 if(!is.na(cmdArgImport('m'))){
@@ -127,6 +132,13 @@ if(!is.na(cmdArgImport('f'))){
   message("default, running fudged")
 }
 
+#Run categorical
+if(!is.na(cmdArgImport('c'))){
+  runCategorical = cmdArgImport('c')
+}else{
+  message("default, running categorical")
+}
+
 #-------------------------
 #-- Import data  ---
 #-------------------------
@@ -169,6 +181,16 @@ if(!file.exists(paste(correlationFileName)) | forceUpdate){
   stop("THIS IS AN ISSUE MESSAGE,  GENERATE AN RER FILE")
 }else{
   CorrelationObject = readRDS(correlationFileName)
+}
+
+#CombinedCorrelationFile 
+combinedCorrelationFileName = paste(outputFolderName, filePrefix, "CombinedCategoricalCorrelationFile.rds", sep= "")
+if(!file.exists(paste(combinedCorrelationFileName)) | forceUpdate){
+  if(runCategorical){
+    stop("THIS IS AN ISSUE MESSAGE,  GENERATE AN RER FILE")
+  }
+}else{
+  combinedCorrelationObject = readRDS(combinedCorrelationFileName)
 }
 
 masterTree = mainTrees$masterTree
@@ -283,6 +305,36 @@ danielPermulationPipeline= function(permulationAmount, message = F){
 }
 
 
+# ----- Categorical --------
+
+categoricalPermulationPipline = function(message = F, permulationAmount){
+  if(message){cat("Simulating Phenotype \n")}
+  simulationTime = suppressWarnings(system.time({permulationsData = categoricalPermulations(mainTrees, phenotypeVector, rm = modelType, rp = rootProbability, ntrees = permulationAmount, percent_relax = relaxationValue)}))
+  if(message){cat("Total Simulation time: ", simulationTime["elapsed"], "\n")}
+  categoricalSimulationTimes <<- append(categoricalSimulationTimes, simulationTime["elapsed"])
+  
+  if(!is.null(permulationsData)){
+    
+    if(message){cat("Calculating Paths \n")}
+    pathsTime = system.time({}) #nothing here, no operation required 
+    if(message){cat("Paths time: ", pathsTime["elapsed"], "\n")}
+    categoricalPathTimes <<- append(categoricalPathTimes, pathsTime["elapsed"])
+
+    
+    if(message){cat("Performing Correlations \n")}
+    correlationTime = system.time({permulatedCorrelations = CategoricalPermulationGetCor(combinedCorrelationObject, permulationsData$trees, phenotypeVector, mainTrees, RERObject, report=T)})  
+    if(message){cat("\n Total Correlation time: ", correlationTime["elapsed"], "\n")}
+    categoricalCorrelationTimes <<- append(categoricalCorrelationTimes, correlationTime["elapsed"])
+    
+    
+    return(permulatedCorrelations)
+  }else{
+    message("Perm failed, skipping")
+    return(NULL)
+  }
+}
+
+
 
 
 #-------------------------
@@ -292,6 +344,71 @@ danielPermulationPipeline= function(permulationAmount, message = F){
 # Basic GetPermsBinary is not being used due to the need for a sisterList 
 # If desired, this can be re-added.
 # getPermsBinary()
+
+
+#-------------------------
+#-- Categorical Permulations ---
+#-------------------------
+
+#create Timing storage objects
+categoricalSimulationTimes = NULL
+categoricalPathTimes = NULL
+categoricalCorrelationTimes = NULL
+categoricalPValueTime = NULL
+
+if(runCategorical){
+  for(i in 1:length(relaxationValue)){
+    currentRelaxation = relaxationValue[i]
+    message(paste("Running categorical at relaxtion:", currentRelaxation))
+    
+    categoricalResult = categoricalPermulationPipline(T, permulationAmount)
+    
+    categoricalTimes = list(categoricalSimulationTimes, categoricalPathTimes, categoricalCorrelationTimes, permulationAmount, categoricalPValueTime )
+    categoricalTimesFilename = paste(outputFolderName, filePrefix, "categoricalTimesFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    saveRDS(categoricalTimes, categoricalTimesFilename)
+    
+    categoricalResultsFilename = paste(outputFolderName, filePrefix, "categoricalResultsFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    saveRDS(categoricalResult, categoricalResultsFilename)
+  }
+  
+}
+
+#-------------------------
+#-- BinaryPermulationsFudged ---
+#-------------------------
+
+
+#Convert percentage fudge to absolute fudge 
+foregroundSpecies = names(phenotypeVector)[which(phenotypeVector == 1)]
+originalTree = foreground2Tree(foregroundSpecies, mainTrees, plotTree = F, clade = "all", useSpecies = speciesFilter)
+totalOriginalForeground = sum(originalTree$edge.length)
+
+
+#Create timing storage objects
+fudgedSimulationTimes = NULL
+fudgedPathTimes = NULL
+fudgedCorrelationTimes = NULL
+fudgedPValueTime = NULL
+
+if(runFudged){
+  for(i in 1:length(relaxationValue)){
+    currentRelaxation = relaxationValue[i]
+    message(paste("Running fudge at relaxtion:", currentRelaxation))
+    fudgeNumber = as.integer(totalOriginalForeground * relaxationValue)
+    
+    
+    fudgedResult = getPermsBinaryFudgedReport(foregroundSpecies, RERObject, mainTrees, speciesFilter, permulationAmount, rootNode, fudge = fudgeNumber, CorrelationObject, phenotypeVector)
+    
+    fudgedTimes = list(fudgedSimulationTimes, fudgedPathTimes, fudgedCorrelationTimes,permulationAmount, fudgedPValueTime )
+    fudgedTimesFilename = paste(outputFolderName, filePrefix, "fudgedTimesFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    saveRDS(fudgedTimes, fudgedTimesFilename)
+    
+    fudgedResultsFilename = paste(outputFolderName, filePrefix, "fudgedResultsFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    saveRDS(fudgedResults, fudgedResultsFilename)
+  }
+  
+}
+
 
 
 #-------------------------
@@ -328,41 +445,6 @@ if(runDaniel){
 # if(runDaniel){danielTimes = functionTimer("danielPermulation", permulationAmount, message = T)}
 
 
-#-------------------------
-#-- BinaryPermulationsFudged ---
-#-------------------------
-
-
-#Convert percentage fudge to absolute fudge 
-foregroundSpecies = names(phenotypeVector)[which(phenotypeVector == 1)]
-originalTree = foreground2Tree(foregroundSpecies, mainTrees, plotTree = F, clade = "all", useSpecies = speciesFilter)
-totalOriginalForeground = sum(originalTree$edge.length)
-
-
-#Create timing storage objects
-fudgedSimulationTimes = NULL
-fudgedPathTimes = NULL
-fudgedCorrelationTimes = NULL
-fudgedPValueTime = NULL
-
-if(runFudged){
-  for(i in 1:length(relaxationValue)){
-    currentRelaxation = relaxationValue[i]
-    message(paste("Running fudge at relaxtion:", currentRelaxation))
-    fudgeNumber = as.integer(totalOriginalForeground * relaxationValue)
-    
-    
-    fudgedResult = getPermsBinaryFudgedReport(foregroundSpecies, RERObject, mainTrees, speciesFilter, permulationAmount, rootNode, fudge = fudgeNumber, CorrelationObject, phenotypeVector)
-    
-    fudgedTimes = list(fudgedSimulationTimes, fudgedPathTimes, fudgedCorrelationTimes,permulationAmount, fudgedPValueTime )
-    fudgedTimesFilename = paste(outputFolderName, filePrefix, "fudgedTimesFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
-    saveRDS(fudgedTimes, fudgedTimesFilename)
-    
-    fudgedResultsFilename = paste(outputFolderName, filePrefix, "fudgedResultsFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
-    saveRDS(fudgedResults, fudgedResultsFilename)
-  }
-
-}
 
 
 
