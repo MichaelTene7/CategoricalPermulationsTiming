@@ -481,6 +481,7 @@ timeListNameSet = c("SimulationTimes", "PathTimes", "CorrelationTimes", "Permula
       
       return(permulatedCorrelations)
     }else{
+      correlationTime = system.time({1+1})
       correlationTime["elapsed"] = NA
       emilyCorrelationTimes <<- append(emilyCorrelationTimes, correlationTime["elapsed"])
       message("Perm failed, skipping")
