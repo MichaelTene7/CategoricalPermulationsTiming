@@ -643,9 +643,9 @@ if(runFudged){
   for(i in 1:length(relaxationValue)){
     currentRelaxation = relaxationValue[i]
     message(paste("Running fudge at relaxtion:", currentRelaxation))
-    fudgeNumber = as.integer(totalOriginalForeground * relaxationValue)
+    fudgeNumber = as.integer(totalOriginalForeground * currentRelaxation)
     
-    fudgedForegroundPrefixname = paste0("fudged", relaxationValue)
+    fudgedForegroundPrefixname = paste0("fudged", currentRelaxation)
     fudgedTempForegroundStorage = makeForegroundSpeciesStorage(fudgedForegroundPrefixname)
     
     fudgedResult = getPermsBinaryFudgedReport(foregroundSpecies, RERObject, mainTrees, speciesFilter, permulationAmount, rootNode, fudge = fudgeNumber, CorrelationObject, phenotypeVector, foregroundStorage = fudgedTempForegroundStorage)
