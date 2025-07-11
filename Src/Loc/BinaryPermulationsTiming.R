@@ -29,7 +29,7 @@ source("Src/Reu/scriptsForTestingPermulationFunctions/neededPermulationFunctions
 source("Src/Reu/RERConvergeFunctions.R")
 
 args = c('r=setupTest', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
-args = c('r=emilyPhen', 'm=Data/emilyMultiphylo.rds', 'v=F', 't=Lophuromys_woosnami_LSUMZ37793', 'n=2', 'l=0.05', 'c=F')
+args = c('r=emilyPhen', 'm=Data/emilyMultiphylo.rds', 'v=F', 't=Lophuromys_woosnami_LSUMZ37793', 'n=2', 'l=0.05', 'c=T')
 
 
 
@@ -280,12 +280,16 @@ timeListNameSet = c("SimulationTimes", "PathTimes", "CorrelationTimes", "Permula
     storage
   }
   
-  recordForegroundSpecies = function(permTree, storage){
+  recordForegroundSpecies = function(permTree, storage, categorical = F){
     permFG_list = storage[[1]]
     inFG = storage[[2]]
+    if(!categorical){
+      fgEdges<-permTree$edge[which(permTree$edge.length==1),2]
+      permFgs<-permTree$tip.label[fgEdges]
+    }else{
+      permFgs = names(permTree$tips[which(permTree$tips ==2)])
+    }
     
-    fgEdges<-permTree$edge[which(permTree$edge.length==1),2]
-    permFgs<-permTree$tip.label[fgEdges]
     permFG_list[[length(permFG_list)+1]]<-permFgs
     inFG<-cbind(inFG, unlist(sapply(masterTree$tip.label, function(x) if(x %in% permFgs){1} else{0})))
     
@@ -293,6 +297,8 @@ timeListNameSet = c("SimulationTimes", "PathTimes", "CorrelationTimes", "Permula
     storage[[2]] = inFG
     storage
   }
+  
+  
   
   # ----- Categorical --------
   
@@ -305,6 +311,16 @@ timeListNameSet = c("SimulationTimes", "PathTimes", "CorrelationTimes", "Permula
     )
     if(message){cat("Total Simulation time: ", simulationTime["elapsed"], "\n")}
     categoricalSimulationTimes <<- append(categoricalSimulationTimes, simulationTime["elapsed"])
+    
+    #record the foregrounds
+    categoricalTrees = permulationsData$trees
+    categoricalForegroundStoragePrefix = paste0("categorical", currentRelaxation)
+    categoricalTempForegroundStorage = makeForegroundSpeciesStorage(categoricalForegroundStoragePrefix)
+    for(i in 1:length(categoricalTrees)){
+      categoricalTempForegroundStorage = recordForegroundSpecies(categoricalTrees[[i]], categoricalTempForegroundStorage, categorical = T)
+    }
+    categoricalTempForegroundStorage <<- categoricalTempForegroundStorage
+    
     
     if(!is.null(permulationsData)){
       
@@ -519,6 +535,7 @@ categoricalSimulationTimes = NULL
 categoricalPathTimes = NULL
 categoricalCorrelationTimes = NULL
 categoricalPValueTime = NULL
+categoricalTempForegroundStorage = NULL
 
 if(runCategorical){
   for(i in 1:length(relaxationValue)){
@@ -529,10 +546,13 @@ if(runCategorical){
     
     categoricalTimes = list(categoricalSimulationTimes, categoricalPathTimes, categoricalCorrelationTimes, permulationAmount, categoricalPValueTime )
     names(categoricalTimes) = paste0("categorical", currentRelaxation, timeListNameSet)
-    categoricalTimesFilename = paste(outputFolderName, filePrefix, "categoricalTimesFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    categoricalTimesFilename = paste(outputFolderName, filePrefix, "Categorical", currentRelaxation, "-", "TimesFile",  runInstanceValue, ".rds", sep= "")
     saveRDS(categoricalTimes, categoricalTimesFilename)
     
-    categoricalResultsFilename = paste(outputFolderName, filePrefix, "categoricalResultsFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    categoricalForegroundsFilename = paste(outputFolderName, filePrefix, "Categorical", currentRelaxation, "-", "ForegroundsFile",  runInstanceValue, ".rds", sep= "")
+    saveRDS(categoricalTempForegroundStorage, categoricalForegroundsFilename)
+    
+    categoricalResultsFilename = paste(outputFolderName, filePrefix, "Categorical", currentRelaxation, "-", "ResultsFile",  runInstanceValue, ".rds", sep= "")
     saveRDS(categoricalResult, categoricalResultsFilename)
   }
   
@@ -564,13 +584,13 @@ if(runEmily){
   
   emilyTimes = list(emilySimulationTimes, emilyPathTimes, emilyCorrelationTimes, permulationAmount, emilyPValueTime)
   names(emilyTimes) = paste0("emilyMidpoint", timeListNameSet)
-  emilyTimesFilename = paste(outputFolderName, filePrefix, "emilyTimesFile", runInstanceValue, ".rds", sep= "")
+  emilyTimesFilename = paste(outputFolderName, filePrefix, "EmilyMidpointTimesFile", runInstanceValue, ".rds", sep= "")
   saveRDS(emilyTimes, emilyTimesFilename)
   
-  emilyMidForegroundsFilename = paste(outputFolderName, filePrefix, "emilyMidForegroundsFile", runInstanceValue, ".rds", sep= "")
+  emilyMidForegroundsFilename = paste(outputFolderName, filePrefix, "EmilyMidpointForegroundsFile", runInstanceValue, ".rds", sep= "")
   saveRDS(emilyMidpointForegroundStorage, emilyMidForegroundsFilename)
   
-  emilyResultsFilename = paste(outputFolderName, filePrefix, "emilyResultsFile", runInstanceValue, ".rds", sep= "")
+  emilyResultsFilename = paste(outputFolderName, filePrefix, "EmilyMidpointResultsFile", runInstanceValue, ".rds", sep= "")
   saveRDS(emilyResults, emilyResultsFilename)
   
   
@@ -590,13 +610,13 @@ if(runEmily){
   
   emilyNoMidTimes = list(emilySimulationTimes, emilyPathTimes, emilyCorrelationTimes, permulationAmount, emilyPValueTime)
   names(emilyTimes) = paste0("emilyNoMidpoint", timeListNameSet)
-  emilyNoMidTimesFilename = paste(outputFolderName, filePrefix, "emilyNoMidTimesFile", runInstanceValue, ".rds", sep= "")
+  emilyNoMidTimesFilename = paste(outputFolderName, filePrefix, "EmilyNoMidpointTimesFile", runInstanceValue, ".rds", sep= "")
   saveRDS(emilyNoMidTimes, emilyNoMidTimesFilename)
   
-  emilyNoMidForegroundsFilename = paste(outputFolderName, filePrefix, "emilyNoMidForegroundsFile", runInstanceValue, ".rds", sep= "")
+  emilyNoMidForegroundsFilename = paste(outputFolderName, filePrefix, "EmilyNoMidpointForegroundsFile", runInstanceValue, ".rds", sep= "")
   saveRDS(emilyNoMidpointForegroundStorage, emilyNoMidForegroundsFilename)
   
-  emilyNoMidResultsFilename = paste(outputFolderName, filePrefix, "emilyNoMidResultsFile", runInstanceValue, ".rds", sep= "")
+  emilyNoMidResultsFilename = paste(outputFolderName, filePrefix, "EmilyNoMidpointResultsFile", runInstanceValue, ".rds", sep= "")
   saveRDS(emilyNoMidResults, emilyNoMidResultsFilename)
 }
 
@@ -630,16 +650,16 @@ if(runFudged){
     
     fudgedResult = getPermsBinaryFudgedReport(foregroundSpecies, RERObject, mainTrees, speciesFilter, permulationAmount, rootNode, fudge = fudgeNumber, CorrelationObject, phenotypeVector, foregroundStorage = fudgedTempForegroundStorage)
     
-    fudgedForegroundsFilename = paste(outputFolderName, filePrefix, "fudgedForegroundsFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    fudgedForegroundsFilename = paste(outputFolderName, filePrefix, "Fudged", currentRelaxation, "-", "ForegroundsFile",  runInstanceValue, ".rds", sep= "")
     saveRDS(fudgedTempForegroundStorage, fudgedForegroundsFilename)
     
     
     fudgedTimes = list(fudgedSimulationTimes, fudgedPathTimes, fudgedCorrelationTimes,permulationAmount, fudgedPValueTime )
     names(fudgedTimes) = paste0("fudged",currentRelaxation, timeListNameSet)
-    fudgedTimesFilename = paste(outputFolderName, filePrefix, "fudgedTimesFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    fudgedTimesFilename = paste(outputFolderName, filePrefix, "Fudged", currentRelaxation, "-", "TimesFile",  runInstanceValue, ".rds", sep= "")
     saveRDS(fudgedTimes, fudgedTimesFilename)
     
-    fudgedResultsFilename = paste(outputFolderName, filePrefix, "fudgedResultsFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    fudgedResultsFilename = paste(outputFolderName, filePrefix, "Fudged", currentRelaxation, "-", "ResultsFile",  runInstanceValue, ".rds", sep= "")
     saveRDS(fudgedResult, fudgedResultsFilename)
   }
   
@@ -669,13 +689,13 @@ if(runDaniel){
   danielResults = danielPermulationPipeline(permulationAmount,T)
   
   danielTimes = list(danielSimulationTimes, danielPathTimes, danielCorrelationTimes, permulationAmount, danielPValueTime)
-  danielTimesFilename = paste(outputFolderName, filePrefix, "danielTimesFile", runInstanceValue, ".rds", sep= "")
+  danielTimesFilename = paste(outputFolderName, filePrefix, "DanielTimesFile", runInstanceValue, ".rds", sep= "")
   saveRDS(danielTimes, danielTimesFilename)
   
-  danielForegroundsFilename = paste(outputFolderName, filePrefix, "danielForegroundsFile", runInstanceValue, ".rds", sep= "")
+  danielForegroundsFilename = paste(outputFolderName, filePrefix, "DanielForegroundsFile", runInstanceValue, ".rds", sep= "")
   saveRDS(danielForegroundStorage, danielForegroundsFilename)
   
-  danielResultsFilename = paste(outputFolderName, filePrefix, "danielResultsFile", runInstanceValue, ".rds", sep= "")
+  danielResultsFilename = paste(outputFolderName, filePrefix, "DanielResultsFile", runInstanceValue, ".rds", sep= "")
   saveRDS(danielResults, danielResultsFilename)
 }
 
