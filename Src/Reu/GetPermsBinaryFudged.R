@@ -104,7 +104,7 @@ getPermsBinaryFudged <- function(fgdspecs, RERs, trees, useSpecies, ntrees, root
 #'@return A list object with enrichment statistics, correlation p-val, rho, and correlation effect size
 #'@export
 getPermsBinaryFudgedReport <- function(fgdspecs, RERs, trees, useSpecies, ntrees, root, fudge = 5, cors,
-                                 phenvec, runCorrelation = T) {
+                                 phenvec, runCorrelation = T, foregroundStorage = NULL) {
   
   
   # get counts on original tree
@@ -151,10 +151,17 @@ getPermsBinaryFudgedReport <- function(fgdspecs, RERs, trees, useSpecies, ntrees
     })
     fudgedSimulationTimes <<- append(fudgedSimulationTimes, fudgedSimulationTime["elapsed"])
     
+    if(!all(is.null(foregroundStorage))){
+      foregroundStorage = recordForegroundSpecies(tf, foregroundStorage)
+    }
+    fudgedTempForegroundStorage <<- foregroundStorage
+    
     
     #get path:
     fudgedPathTime = system.time({p=tree2Paths(tf, trees, useSpecies = useSpecies)})
     fudgedPathTimes <<- append(fudgedPathTimes, fudgedPathTime["elapsed"])
+    
+    
     
     #run correlation:
     fugedCorrelationTime = system.time({c=correlateWithBinaryPhenotype(RERs, p)})

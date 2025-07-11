@@ -22,8 +22,14 @@ source("Src/Reu/permPValCorReport.R")
 source("Src/Reu/GetPermsBinaryFudged.R")
 source("Src/Reu/RelaxedRejectionPermFuncs2.R")
 source("Src/Reu/CategoricalPermulationsParallelFunctions.R")
+source("Src/Reu/scriptsForTestingPermulationFunctions/simBinPhenoSSM_fromMasterTree.r")
+source("Src/Reu/convertPathsToPhenVector.R")
+source("Src/Reu/convertBinaryToCategoricalCorrelationsFormat.R")
+source("Src/Reu/scriptsForTestingPermulationFunctions/neededPermulationFunctions.r")
+source("Src/Reu/RERConvergeFunctions.R")
 
 args = c('r=setupTest', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
+args = c('r=emilyPhen', 'm=Data/emilyMultiphylo.rds', 'v=F', 't=Lophuromys_woosnami_LSUMZ37793', 'n=2', 'l=0.05', 'c=F')
 
 
 
@@ -71,10 +77,14 @@ permulationAmount = 100
 runInstanceValue = NULL
 useRelaxation = FALSE
 relaxationValue = NULL
+PathsObject = NA
 rootSpeciesValue = "REFERENCE"
+speciesFilter = NULL
 runDaniel = T
 runFudged = T
 runCategorical = T
+runEmily = T
+
 
 #Settings without an arugment but centralized here 
 min.sp = 10
@@ -139,6 +149,13 @@ if(!is.na(cmdArgImport('c'))){
   message("default, running categorical")
 }
 
+#Run emily
+if(!is.na(cmdArgImport('e'))){
+  runEmily = cmdArgImport('e')
+}else{
+  message("default, running emily")
+}
+
 #-------------------------
 #-- Import data  ---
 #-------------------------
@@ -158,12 +175,35 @@ if (file.exists(paste(speciesFilterFileName))){
 }else{                                                    
   message("No speciesFilter arg, using all species")                           #if not, use no filter
 }
+if(all(is.null(speciesFilter))){ # If the species filter is meant to be empty, that is, all of the species should be used
+  speciesFilter = mainTrees$masterTree$tip.label #include all of the species on the tree in the filter 
+}
+
+
+#PathsFile
+PathsFileFilename = paste(outputFolderName, filePrefix, "PathsFile.rds", sep="")
+if(file.exists(PathsFileFilename)){
+  PathsObject = readRDS(PathsFileFilename)
+}else{
+  if(runEmily){
+    stop("THIS IS AN ISSUE MESSAGE, GENERATE A PATHSFILE")  
+  }else{
+    message("No Paths found, not running emily, not required.")
+  }
+}
+
 #phenotypeVector
 phenotypeVectorFilename = paste(outputFolderName, filePrefix, "PhenotypeVector.rds", sep="")
-if(file.exists(phenotypeVectorFilename = paste(outputFolderName, filePrefix, "PhenotypeVector.rds", sep=""))){
+if(file.exists(phenotypeVectorFilename)){
   phenotypeVector = readRDS(phenotypeVectorFilename)
 }else{
-  stop("THIS IS AN ISSUE MESSAGE, GENERATE A PHENTOTYPEVECTOR")
+  if(!all(is.na(PathsObject))){
+    message("Generating phenotype vector from paths")
+    phenotypeVector = convertPathsToPhenVector(PathsObject)
+    phenotypeVector= phenotypeVector[which(names(phenotypeVector) %in% mainTrees$masterTree$tip.label)]
+  }else{
+    stop("THIS IS AN ISSUE MESSAGE, GENERATE A PHENTOTYPEVECTOR")
+  }
 }
 phenotypeVector = convertForegroundVector(phenotypeVector)
 
@@ -178,7 +218,7 @@ if(!file.exists(paste(RERFileName)) | forceUpdate){
 #CorrelationFile 
 correlationFileName = paste(outputFolderName, filePrefix, "CorrelationFile.rds", sep= "")
 if(!file.exists(paste(correlationFileName)) | forceUpdate){
-  stop("THIS IS AN ISSUE MESSAGE,  GENERATE AN RER FILE")
+  stop("THIS IS AN ISSUE MESSAGE,  GENERATE AN Basic Correlation FILE")
 }else{
   CorrelationObject = readRDS(correlationFileName)
 }
@@ -187,156 +227,280 @@ if(!file.exists(paste(correlationFileName)) | forceUpdate){
 combinedCorrelationFileName = paste(outputFolderName, filePrefix, "CombinedCategoricalCorrelationFile.rds", sep= "")
 if(!file.exists(paste(combinedCorrelationFileName)) | forceUpdate){
   if(runCategorical){
-    stop("THIS IS AN ISSUE MESSAGE,  GENERATE AN RER FILE")
+    message("Generating categorical correlaiton format from binary correlation.")
+    combinedCorrelationObject = convertBinaryToCategoricalCorrelationsFormat(CorrelationObject)
   }
 }else{
   combinedCorrelationObject = readRDS(combinedCorrelationFileName)
 }
 
+
+
 masterTree = mainTrees$masterTree
 rootNode = which(masterTree$tip.label %in% rootSpeciesValue)
-#-------------------------
-#-- Timer Function ---
-#-------------------------
+rootedMasterTree = multi2di(masterTree)
 
-functionTimer = function(timedFunction, repeatNumber, count = T, report = F, ...){
-  functionToTime = get(timedFunction, mode = "function", inherits = T)
-  TimingStart = Sys.time()
-  durationVector = NULL
-  
-  for(i in 1:repeatNumber){
-    instanceStart = Sys.time()
-    out = functionToTime(...)
-      
-    if(count){message(i)}
-    if(report){message(out)}
-    instanceEnd = Sys.time()
-    instanceDuration = instanceEnd - instanceStart
-    durationVector = append(durationVector, instanceDuration)
-    
-  }
-  if(report){cat(durationVector)}
-  return(durationVector)
-}
+timeListNameSet = c("SimulationTimes", "PathTimes", "CorrelationTimes", "PermulationAmount", "PvalueCalculationTime")
 
 #-------------------------
 #-- Functions  ---
 #-------------------------
-
-
-# ---- Daniel ---- 
-#Convert format function
-convertPermulationFormat = function(permulationCorList, RERObj = RERObject, permulationNum = permulationNumber){
-  permulationCorList
-  permPvals = data.frame(matrix(ncol = permulationNum, nrow = nrow(RERObj)))
-  rownames(permPvals) = rownames(RERObj)
-  permRhovals = data.frame(matrix(ncol = permulationNum, nrow = nrow(RERObj)))
-  rownames(permRhovals) = rownames(RERObj)
-  permStatvals = data.frame(matrix(ncol = permulationNum, nrow = nrow(RERObj)))
-  rownames(permStatvals) = rownames(RERObj)
-  for (i in 1:length(permulationCorList)) {
-    permPvals[, i] = permulationCorList[[i]]$P
-    permRhovals[, i] = permulationCorList[[i]]$Rho
-    permStatvals[, i] = sign(permulationCorList[[i]]$Rho) * -log10(permulationCorList[[i]]$P)
-  }
-  output = vector("list", 3)
-  output[[1]] = permPvals
-  output[[2]] = permRhovals
-  output[[3]] = permStatvals
-  names(output) = c("corP", "corRho", "corStat")
-  output
-}
-
-danielSinglePermulation = function(message = F){
-  if(message){cat("Simulating Phenotype \n")}
-  simulationTime = suppressWarnings(system.time({permulatedForeground = fastSimBinPhenoVec(tree=rootedMasterTree, phenvec=phenotypeVector, internal=internalNumberValue)}))
-  if(message){cat("Simulation time: ", simulationTime["elapsed"], "\n")}
-  danielSimulationTimes <<- append(danielSimulationTimes, simulationTime["elapsed"])
+{
+  # ---- Timer ----
   
-  if(message){cat("Creating Tree \n")}
-  treeTime = system.time({tryCatch({permulatedTree = foreground2Tree(permulatedForeground, mainTrees, plotTree=F, clade="all", transition="bidirectional", useSpecies=speciesFilter)}, error = function(cond){permulatedTree = NULL; message("Original error:"); message(cond)})}) #generate a tree using that foregound
-  if(message){cat("Tree time: ", treeTime["elapsed"], "\n")}
-  
-  if(!is.null(permulatedTree)){
-    if(message){cat("Calculating Paths \n")}
-    pathsTime = system.time({permulatedPaths = tree2Paths(permulatedTree, mainTrees, binarize=T, useSpecies=speciesFilter)})                                                    #generate a path from that tree
-    if(message){cat("Paths time: ", pathsTime["elapsed"], "\n")}
-    danielPathTimes <<- append(danielPathTimes, pathsTime["elapsed"])
+  functionTimer = function(timedFunction, repeatNumber, count = T, report = F, ...){
+    functionToTime = get(timedFunction, mode = "function", inherits = T)
+    TimingStart = Sys.time()
+    durationVector = NULL
     
-    if(message){cat("Performing Correlations \n")}
-    correlationTime = system.time({permulatedCorrelations = correlateWithBinaryPhenotype(RERObject, permulatedPaths, min.sp=min.sp, min.pos = min.pos)})                                                 #Use that path to get a coreelation of the null phenotype to genes (this is the outbut of a Get PermsBinary run)
-    if(message){cat("\n Correlation time: ", correlationTime["elapsed"], "\n")}
-    danielCorrelationTimes <<- append(danielCorrelationTimes, correlationTime["elapsed"])
-    
-    
-    return(permulatedCorrelations)
-  }else{
-    message("Perm failed, skipping")
-    return(NULL)
-  }
-}
-
-danielPermulationPipeline= function(permulationAmount, message = F){
-  
-  danielSimulationTimes = NULL
-  danielPathTimes = NULL
-  danielCorrelationTimes = NULL
-  danielPValueTime = NULL
-  
-  {cat("Generating Correlation Data \n")}
-  dataTime = system.time({
-    correlationList = list()
-    for(i in 1:permulationAmount){                                                  #Repeat for the number of permulations
-      singlePermCorrelation = danielSinglePermulation(message = message)
-      correlationList = append(correlationList, list(singlePermCorrelation))        #add it to a growing list of the dataframes outputted from CorrelateWithBinaryPhenotype
-      if(message){message("Completed permulation: ", i)}                                         #report completed the permulation
+    for(i in 1:repeatNumber){
+      instanceStart = Sys.time()
+      out = functionToTime(...)
+      
+      if(count){message(i)}
+      if(report){message(out)}
+      instanceEnd = Sys.time()
+      instanceDuration = instanceEnd - instanceStart
+      durationVector = append(durationVector, instanceDuration)
+      
     }
-    convertedPermulations = convertPermulationFormat(correlationList)
-  })
-  cat("\n -------------- \n Permulation Data time: ", dataTime["elapsed"], "\n ----------- \n")
+    if(report){cat(durationVector)}
+    return(durationVector)
+  }
   
-  {cat("Calculating P values \n")}
-  danielPValueTime = system.time({  permulationPValues = permPValCorReport(CorrelationObject, convertedPermulations)})
-  cat("Pvalue time: ", danielPValueTime["elapsed"], "\n")
-  danielPValueTime <<- danielPValueTime["elapsed"]
   
-  return(permulationPValues)
+  # ---- Record species in foreground ----
   
-}
-
-
-# ----- Categorical --------
-
-categoricalPermulationPipline = function(message = F, permulationAmount){
-  if(message){cat("Simulating Phenotype \n")}
-  simulationTime = suppressWarnings(system.time({permulationsData = categoricalPermulations(mainTrees, phenotypeVector, rm = modelType, rp = rootProbability, ntrees = permulationAmount, percent_relax = currentRelaxation)}))
-  if(message){cat("Total Simulation time: ", simulationTime["elapsed"], "\n")}
-  categoricalSimulationTimes <<- append(categoricalSimulationTimes, simulationTime["elapsed"])
+  makeForegroundSpeciesStorage = function(namePrefix){
+    permulatedForegroundEdgeList = list()
+    tipInForegroundBinary= c()
+    storage = list(permulatedForegroundEdgeList, tipInForegroundBinary)
+    storageNames = c("PermulatedForegroundEdgeList", "TipInForegroundBinary")
+    names(storage) = paste0(namePrefix, storageNames)
+    storage
+  }
   
-  if(!is.null(permulationsData)){
+  recordForegroundSpecies = function(permTree, storage){
+    permFG_list = storage[[1]]
+    inFG = storage[[2]]
+    
+    fgEdges<-permTree$edge[which(permTree$edge.length==1),2]
+    permFgs<-permTree$tip.label[fgEdges]
+    permFG_list[[length(permFG_list)+1]]<-permFgs
+    inFG<-cbind(inFG, unlist(sapply(masterTree$tip.label, function(x) if(x %in% permFgs){1} else{0})))
+    
+    storage[[1]] = permFG_list
+    storage[[2]] = inFG
+    storage
+  }
+  
+  # ----- Categorical --------
+  
+  categoricalPermulationPipline = function(message = F, permulationAmount){
+    if(message){cat("Simulating Phenotype \n")}
+    simulationTime = suppressWarnings(
+      system.time({
+        permulationsData = categoricalPermulations(mainTrees, phenotypeVector, rm = modelType, rp = rootProbability, ntrees = permulationAmount, percent_relax = currentRelaxation)
+      })
+    )
+    if(message){cat("Total Simulation time: ", simulationTime["elapsed"], "\n")}
+    categoricalSimulationTimes <<- append(categoricalSimulationTimes, simulationTime["elapsed"])
+    
+    if(!is.null(permulationsData)){
+      
+      if(message){cat("Calculating Paths \n")}
+      pathsTime = system.time({}) #nothing here, no operation required 
+      if(message){cat("Paths time: ", pathsTime["elapsed"], "\n")}
+      categoricalPathTimes <<- append(categoricalPathTimes, pathsTime["elapsed"])
+      
+      
+      if(message){cat("Performing Correlations \n")}
+      correlationTime = system.time({permulatedCorrelations = CategoricalPermulationGetCor(combinedCorrelationObject, permulationsData$trees, phenotypeVector, mainTrees, RERObject, report=T)})  
+      if(message){cat("\n Total Correlation time: ", correlationTime["elapsed"], "\n")}
+      categoricalCorrelationTimes <<- append(categoricalCorrelationTimes, correlationTime["elapsed"])
+      
+      
+      return(permulatedCorrelations)
+    }else{
+      message("Perm failed, skipping")
+      return(NULL)
+    }
+  }
+  
+  # ---- Daniel ---- 
+  #Convert format function
+  convertPermulationFormat = function(permulationCorList, RERObj = RERObject, permulationNum = permulationAmount){
+    permulationCorList
+    permPvals = data.frame(matrix(ncol = permulationNum, nrow = nrow(RERObj)))
+    rownames(permPvals) = rownames(RERObj)
+    permRhovals = data.frame(matrix(ncol = permulationNum, nrow = nrow(RERObj)))
+    rownames(permRhovals) = rownames(RERObj)
+    permStatvals = data.frame(matrix(ncol = permulationNum, nrow = nrow(RERObj)))
+    rownames(permStatvals) = rownames(RERObj)
+    for (i in 1:length(permulationCorList)) {
+      permPvals[, i] = permulationCorList[[i]]$P
+      permRhovals[, i] = permulationCorList[[i]]$Rho
+      permStatvals[, i] = sign(permulationCorList[[i]]$Rho) * -log10(permulationCorList[[i]]$P)
+    }
+    output = vector("list", 3)
+    output[[1]] = permPvals
+    output[[2]] = permRhovals
+    output[[3]] = permStatvals
+    names(output) = c("corP", "corRho", "corStat")
+    output
+  }
+  
+  danielSinglePermulation = function(message = F){
+    if(message){cat("Simulating Phenotype \n")}
+    simulationTime = suppressWarnings(
+      system.time({
+        permulatedForeground = fastSimBinPhenoVec(tree=rootedMasterTree, phenvec=phenotypeVector, internal=internalNumberValue)
+        })
+      )
+    if(message){cat("Simulation time: ", simulationTime["elapsed"], "\n")}
+    danielSimulationTimes <<- append(danielSimulationTimes, simulationTime["elapsed"])
+    
+    permulatedTree = NULL
+    if(message){cat("Creating Tree \n")}
+    treeTime = system.time({tryCatch({permulatedTree = foreground2Tree(permulatedForeground, mainTrees, plotTree=F, clade="all", transition="bidirectional", useSpecies=speciesFilter)}, error = function(cond){permulatedTree = NULL; message("Original error:"); message(cond)})}) #generate a tree using that foregound
+    if(message){cat("Tree time: ", treeTime["elapsed"], "\n")}
+    
+    if(!is.null(permulatedTree)){
+      
+      danielForegroundStorage <<- recordForegroundSpecies(permulatedTree, danielForegroundStorage)
+      
+      if(message){cat("Calculating Paths \n")}
+      pathsTime = system.time({permulatedPaths = tree2Paths(permulatedTree, mainTrees, binarize=T, useSpecies=speciesFilter)})                                                    #generate a path from that tree
+      if(message){cat("Paths time: ", pathsTime["elapsed"], "\n")}
+      danielPathTimes <<- append(danielPathTimes, pathsTime["elapsed"])
+      
+      if(message){cat("Performing Correlations \n")}
+      correlationTime = system.time({permulatedCorrelations = correlateWithBinaryPhenotype(RERObject, permulatedPaths, min.sp=min.sp, min.pos = min.pos)})                                                 #Use that path to get a coreelation of the null phenotype to genes (this is the outbut of a Get PermsBinary run)
+      if(message){cat("\n Correlation time: ", correlationTime["elapsed"], "\n")}
+      danielCorrelationTimes <<- append(danielCorrelationTimes, correlationTime["elapsed"])
+      
+      
+      return(permulatedCorrelations)
+    }else{
+      pathsTime["elapsed"] = NA
+      danielPathTimes <<- append(danielPathTimes, pathsTime["elapsed"])
+      correlationTime["elapsed"] = NA
+      danielCorrelationTimes <<- append(danielCorrelationTimes, correlationTime["elapsed"])
+      message("Perm failed, skipping")
+      return(NULL)
+    }
+  }
+  
+  danielPermulationPipeline= function(permulationAmount, message = F){
+    
+    danielSimulationTimes = NULL
+    danielPathTimes = NULL
+    danielCorrelationTimes = NULL
+    danielPValueTime = NULL
+    
+    {cat("Generating Correlation Data \n")}
+    dataTime = system.time({
+      correlationList = list()
+      for(i in 1:permulationAmount){                                                  #Repeat for the number of permulations
+        singlePermCorrelation = danielSinglePermulation(message = message)
+        correlationList = append(correlationList, list(singlePermCorrelation))        #add it to a growing list of the dataframes outputted from CorrelateWithBinaryPhenotype
+        if(message){message("Completed permulation: ", i)}                                         #report completed the permulation
+      }
+      convertedPermulations = convertPermulationFormat(correlationList)
+    })
+    cat("\n -------------- \n Permulation Data time: ", dataTime["elapsed"], "\n ----------- \n")
+    
+    {cat("Calculating P values \n")}
+    danielPValueTime = system.time({  permulationPValues = permPValCorReport(CorrelationObject, convertedPermulations)})
+    cat("Pvalue time: ", danielPValueTime["elapsed"], "\n")
+    danielPValueTime <<- danielPValueTime["elapsed"]
+    
+    return(permulationPValues)
+    
+  }
+  
+  
+  
+  
+  # --- Emily ----
+  
+  
+  emilySinglePermulation = function(message = F, useMidpoint = T){
+    if(message){cat("Simulating Phenotype \n")}
+    simulationTime = suppressWarnings(
+      system.time({
+        if(useMidpoint){
+          permulatedTree = simBinPhenoSSM_fromMasterTree(tree=masterTree, trees=mainTrees, fg_vec=foregroundSpecies, pathvec=PathsObject)
+        }else{
+          permulatedTree = simBinPhenoSSM_fromMasterTree_noMidpointRoot(tree=masterTree, trees=mainTrees, fg_vec=foregroundSpecies, pathvec=PathsObject)
+        }
+        })
+      )
+    if(message){cat("Simulation time: ", simulationTime["elapsed"], "\n")}
+    emilySimulationTimes <<- append(emilySimulationTimes, simulationTime["elapsed"])
     
     if(message){cat("Calculating Paths \n")}
-    pathsTime = system.time({}) #nothing here, no operation required 
+    permulatedPaths = NULL
+    pathsTime = system.time({ 
+      tryCatch({
+        permulatedPaths = tree2Paths(permulatedTree, mainTrees, binarize=T, useSpecies=speciesFilter)
+      }, error = function(cond){permulatedPaths = NULL; message("Original error:"); message(cond)})
+    })                                                    #generate a path from that tree
     if(message){cat("Paths time: ", pathsTime["elapsed"], "\n")}
-    categoricalPathTimes <<- append(categoricalPathTimes, pathsTime["elapsed"])
+    emilyPathTimes <<- append(emilyPathTimes, pathsTime["elapsed"])
+    
+    if(!is.null(permulatedPaths)){
 
+      if(useMidpoint){
+        emilyMidpointForegroundStorage <<- recordForegroundSpecies(permulatedTree, emilyMidpointForegroundStorage)
+      }else{
+        emilyNoMidpointForegroundStorage <<- recordForegroundSpecies(permulatedTree, emilyNoMidpointForegroundStorage)
+      }
+      
+      if(message){cat("Performing Correlations \n")}
+      correlationTime = system.time({permulatedCorrelations = correlateWithBinaryPhenotype(RERObject, permulatedPaths, min.sp=min.sp, min.pos = min.pos)})                                                 #Use that path to get a coreelation of the null phenotype to genes (this is the outbut of a Get PermsBinary run)
+      if(message){cat("\n Correlation time: ", correlationTime["elapsed"], "\n")}
+      emilyCorrelationTimes <<- append(emilyCorrelationTimes, correlationTime["elapsed"])
+      
+      
+      return(permulatedCorrelations)
+    }else{
+      correlationTime["elapsed"] = NA
+      emilyCorrelationTimes <<- append(emilyCorrelationTimes, correlationTime["elapsed"])
+      message("Perm failed, skipping")
+      return(NULL)
+    }
+  }
+  
+  emilyPermulationPipeline= function(permulationAmount, message = F, midpoint = T){
     
-    if(message){cat("Performing Correlations \n")}
-    correlationTime = system.time({permulatedCorrelations = CategoricalPermulationGetCor(combinedCorrelationObject, permulationsData$trees, phenotypeVector, mainTrees, RERObject, report=T)})  
-    if(message){cat("\n Total Correlation time: ", correlationTime["elapsed"], "\n")}
-    categoricalCorrelationTimes <<- append(categoricalCorrelationTimes, correlationTime["elapsed"])
+    emilySimulationTimes = NULL
+    emilyPathTimes = NULL
+    emilyCorrelationTimes = NULL
+    emilyPValueTime = NULL
     
+    {cat("Generating Correlation Data \n")}
+    dataTime = system.time({
+      correlationList = list()
+      for(i in 1:permulationAmount){                                                  #Repeat for the number of permulations
+        singlePermCorrelation = emilySinglePermulation(message = message, useMidpoint = midpoint)
+        correlationList = append(correlationList, list(singlePermCorrelation))        #add it to a growing list of the dataframes outputted from CorrelateWithBinaryPhenotype
+        if(message){message("Completed permulation: ", i)}                                         #report completed the permulation
+      }
+      convertedPermulations = convertPermulationFormat(correlationList)
+      #convertedPermulations = correlationList
+    })
+    cat("\n -------------- \n Permulation Data time: ", dataTime["elapsed"], "\n ----------- \n")
     
-    return(permulatedCorrelations)
-  }else{
-    message("Perm failed, skipping")
-    return(NULL)
+    {cat("Calculating P values \n")}
+    emilyPValueTime = system.time({  permulationPValues = permPValCorReport(CorrelationObject, convertedPermulations)})
+    cat("Pvalue time: ", emilyPValueTime["elapsed"], "\n")
+    emilyPValueTime <<- emilyPValueTime["elapsed"]
+    
+    return(permulationPValues)
+    
   }
 }
-
-
-
-
 #-------------------------
 #-- Basic Permulations ---
 #-------------------------
@@ -364,6 +528,7 @@ if(runCategorical){
     categoricalResult = categoricalPermulationPipline(T, permulationAmount)
     
     categoricalTimes = list(categoricalSimulationTimes, categoricalPathTimes, categoricalCorrelationTimes, permulationAmount, categoricalPValueTime )
+    names(categoricalTimes) = paste0("categorical", currentRelaxation, timeListNameSet)
     categoricalTimesFilename = paste(outputFolderName, filePrefix, "categoricalTimesFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
     saveRDS(categoricalTimes, categoricalTimesFilename)
     
@@ -372,6 +537,70 @@ if(runCategorical){
   }
   
 }
+
+#-------------------------
+#-- Emily Permulations ---
+#-------------------------
+
+#create Timing storage objects
+emilySimulationTimes = NULL
+emilyPathTimes = NULL
+emilyCorrelationTimes = NULL
+emilyPValueTime = NULL
+
+emilyMidpointForegroundStorage = makeForegroundSpeciesStorage("emilyMidpoint")
+emilyNoMidpointForegroundStorage = makeForegroundSpeciesStorage("emilyNoMidpoint")
+
+foregroundSpecies = names(phenotypeVector)[phenotypeVector == 1]
+
+if(runEmily){
+  emilySimulationTimes = NULL
+  emilyPathTimes = NULL
+  emilyCorrelationTimes = NULL
+  emilyPValueTime = NULL
+  cat("----------------- \n Midpoint Analysis \n ----------- \n")
+  
+  emilyResults = emilyPermulationPipeline(permulationAmount,T)
+  
+  emilyTimes = list(emilySimulationTimes, emilyPathTimes, emilyCorrelationTimes, permulationAmount, emilyPValueTime)
+  names(emilyTimes) = paste0("emilyMidpoint", timeListNameSet)
+  emilyTimesFilename = paste(outputFolderName, filePrefix, "emilyTimesFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(emilyTimes, emilyTimesFilename)
+  
+  emilyMidForegroundsFilename = paste(outputFolderName, filePrefix, "emilyMidForegroundsFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(emilyMidpointForegroundStorage, emilyMidForegroundsFilename)
+  
+  emilyResultsFilename = paste(outputFolderName, filePrefix, "emilyResultsFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(emilyResults, emilyResultsFilename)
+  
+  
+  
+  
+  # --- no midpoint version --- 
+  message("Completed Emily Midpoint Analysis")
+  cat("----------------- \n No Midpoint Analysis \n ----------- \n")
+  
+  #reset the containers 
+  emilySimulationTimes = NULL
+  emilyPathTimes = NULL
+  emilyCorrelationTimes = NULL
+  emilyPValueTime = NULL
+  
+  emilyNoMidResults = emilyPermulationPipeline(permulationAmount,T, F)
+  
+  emilyNoMidTimes = list(emilySimulationTimes, emilyPathTimes, emilyCorrelationTimes, permulationAmount, emilyPValueTime)
+  names(emilyTimes) = paste0("emilyNoMidpoint", timeListNameSet)
+  emilyNoMidTimesFilename = paste(outputFolderName, filePrefix, "emilyNoMidTimesFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(emilyNoMidTimes, emilyNoMidTimesFilename)
+  
+  emilyNoMidForegroundsFilename = paste(outputFolderName, filePrefix, "emilyNoMidForegroundsFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(emilyNoMidpointForegroundStorage, emilyNoMidForegroundsFilename)
+  
+  emilyNoMidResultsFilename = paste(outputFolderName, filePrefix, "emilyNoMidResultsFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(emilyNoMidResults, emilyNoMidResultsFilename)
+}
+
+
 
 #-------------------------
 #-- BinaryPermulationsFudged ---
@@ -396,15 +625,22 @@ if(runFudged){
     message(paste("Running fudge at relaxtion:", currentRelaxation))
     fudgeNumber = as.integer(totalOriginalForeground * relaxationValue)
     
+    fudgedForegroundPrefixname = paste0("fudged", relaxationValue)
+    fudgedTempForegroundStorage = makeForegroundSpeciesStorage(fudgedForegroundPrefixname)
     
-    fudgedResult = getPermsBinaryFudgedReport(foregroundSpecies, RERObject, mainTrees, speciesFilter, permulationAmount, rootNode, fudge = fudgeNumber, CorrelationObject, phenotypeVector)
+    fudgedResult = getPermsBinaryFudgedReport(foregroundSpecies, RERObject, mainTrees, speciesFilter, permulationAmount, rootNode, fudge = fudgeNumber, CorrelationObject, phenotypeVector, foregroundStorage = fudgedTempForegroundStorage)
+    
+    fudgedForegroundsFilename = paste(outputFolderName, filePrefix, "fudgedForegroundsFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
+    saveRDS(fudgedTempForegroundStorage, fudgedForegroundsFilename)
+    
     
     fudgedTimes = list(fudgedSimulationTimes, fudgedPathTimes, fudgedCorrelationTimes,permulationAmount, fudgedPValueTime )
+    names(fudgedTimes) = paste0("fudged",currentRelaxation, timeListNameSet)
     fudgedTimesFilename = paste(outputFolderName, filePrefix, "fudgedTimesFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
     saveRDS(fudgedTimes, fudgedTimesFilename)
     
     fudgedResultsFilename = paste(outputFolderName, filePrefix, "fudgedResultsFile", currentRelaxation, "-", runInstanceValue, ".rds", sep= "")
-    saveRDS(fudgedResults, fudgedResultsFilename)
+    saveRDS(fudgedResult, fudgedResultsFilename)
   }
   
 }
@@ -418,7 +654,6 @@ if(runFudged){
 
 
 #Single-time setup
-rootedMasterTree = multi2di(masterTree)
 bitMap = makeLeafMap(rootedMasterTree)
 internalNumberValue = countInternal(rootedMasterTree, bitMap,fg=names(phenotypeVector)[which(phenotypeVector==1)])
 
@@ -428,7 +663,7 @@ danielSimulationTimes = NULL
 danielPathTimes = NULL
 danielCorrelationTimes = NULL
 danielPValueTime = NULL
-
+danielForegroundStorage = makeForegroundSpeciesStorage("daniel")
 
 if(runDaniel){
   danielResults = danielPermulationPipeline(permulationAmount,T)
@@ -436,6 +671,9 @@ if(runDaniel){
   danielTimes = list(danielSimulationTimes, danielPathTimes, danielCorrelationTimes, permulationAmount, danielPValueTime)
   danielTimesFilename = paste(outputFolderName, filePrefix, "danielTimesFile", runInstanceValue, ".rds", sep= "")
   saveRDS(danielTimes, danielTimesFilename)
+  
+  danielForegroundsFilename = paste(outputFolderName, filePrefix, "danielForegroundsFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(danielForegroundStorage, danielForegroundsFilename)
   
   danielResultsFilename = paste(outputFolderName, filePrefix, "danielResultsFile", runInstanceValue, ".rds", sep= "")
   saveRDS(danielResults, danielResultsFilename)
