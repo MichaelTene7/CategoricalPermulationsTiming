@@ -419,7 +419,9 @@ timeListNameSet = c("SimulationTimes", "PathTimes", "CorrelationTimes", "Permula
       correlationList = list()
       for(i in 1:permulationAmount){                                                  #Repeat for the number of permulations
         singlePermCorrelation = danielSinglePermulation(message = message)
-        correlationList = append(correlationList, list(singlePermCorrelation))        #add it to a growing list of the dataframes outputted from CorrelateWithBinaryPhenotype
+        if(!all(is.null(singlePermCorrelation))){
+          correlationList = append(correlationList, list(singlePermCorrelation))        #add it to a growing list of the dataframes outputted from CorrelateWithBinaryPhenotype
+        }
         if(message){message("Completed permulation: ", i)}                                         #report completed the permulation
       }
       convertedPermulations = convertPermulationFormat(correlationList)
@@ -501,7 +503,9 @@ timeListNameSet = c("SimulationTimes", "PathTimes", "CorrelationTimes", "Permula
       correlationList = list()
       for(i in 1:permulationAmount){                                                  #Repeat for the number of permulations
         singlePermCorrelation = emilySinglePermulation(message = message, useMidpoint = midpoint)
+        if(!all(is.null(singlePermCorrelation))){
         correlationList = append(correlationList, list(singlePermCorrelation))        #add it to a growing list of the dataframes outputted from CorrelateWithBinaryPhenotype
+        }
         if(message){message("Completed permulation: ", i)}                                         #report completed the permulation
       }
       convertedPermulations = convertPermulationFormat(correlationList)
