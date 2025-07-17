@@ -34,7 +34,7 @@ for(k in 1:length(runtypes)){
     message("Times")
     currentTimeFile = paste0(fileStarter, "TimesFile", fileSuffix)
     currentTime = readRDS(currentTimeFile)
-    if(i == 1 | if(is.null(combinedTimes))){
+    if(i == 1 | is.null(combinedTimes)){
       for(j in 1:length(currentTime)){
         combinedTimes[[j]] = currentTime[[j]]
         
