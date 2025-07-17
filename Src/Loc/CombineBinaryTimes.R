@@ -57,7 +57,7 @@ for(k in 1:length(runtypes)){
     if(i == 1 | is.null(combinedForeground)){
       for(j in 1:length(currentForeground)){
         if(!is.null(currentForeground[[j]])){
-          currentForeground[[j]] = currentForeground[[j]]
+          combinedForeground[[j]] = currentForeground[[j]]
         }else{
           currentForeground[[j]] = NA
         }
