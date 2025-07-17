@@ -156,8 +156,8 @@ for(k in 1:length(runtypes)){
   names(summaries)[length(summaries)] = currentRuntype 
   
   # -- make a foreground summary, add to list 
-  foregrounds[[length(foregrounds)+1]] = typeSummary
-  names(foregrounds)[length(foregrounds)] = combinedForeground 
+  foregrounds[[length(foregrounds)+1]] = combinedForeground
+  names(foregrounds)[length(foregrounds)] = currentRuntype 
 }
 
 summariesDataframe = do.call(rbind, lapply(summaries, as.data.frame))
