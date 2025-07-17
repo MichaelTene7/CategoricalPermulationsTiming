@@ -13,6 +13,7 @@ relaxCombos = expand.grid(a = relaxLevels, b = relaxableTypes)
 runtypes = append(paste0(relaxCombos$b, relaxCombos$a), unrelaxableTypes)
 
 summaries = list()
+foregrounds = list(edgeList = list(), tipBinaries = list())
 processTimes = function(timeObject, runType = NA, totaled = F){
   
   simulationTime = mean(timeObject[[1]], na.rm = T)
@@ -149,12 +150,21 @@ for(k in 1:length(runtypes)){
   assign(combineForegroundName, combinedForeground)
   saveRDS(combinedForeground, paste0(outputFolder, combineForegroundName, ".rds"))
  
-  
+  # -- Make a time summary, add to summary list
   typeSummary = processTimes(combinedTimes, currentRuntype, categoricalRun)
   summaries[[length(summaries)+1]] = typeSummary
   names(summaries)[length(summaries)] = currentRuntype 
+  
+  # -- make a foreground summary, add to list 
+  
+  foregrounds[1][k] = currentCombinedForegrounds[1]
+  foregrounds[2][k] = currentCombinedForegrounds[2]
 }
 
 summariesDataframe = do.call(rbind, lapply(summaries, as.data.frame))
 summariesFilename = paste0(outputFolder, fileprefix, "CombinedTimingSummaries.rds")
 saveRDS(summariesDataframe, summariesFilename)
+
+foregroundSummariesFilename = paste0(outputFolder, fileprefix, "CombinedForegroundSummaries.rds")
+saveRDS(foregrounds, foregroundSummariesFilename)
+
