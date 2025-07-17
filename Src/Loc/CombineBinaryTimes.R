@@ -78,7 +78,7 @@ for(k in 1:length(runtypes)){
   message(k)
   message(currentRuntype)
   
-  if(grepl("Categorical", currentRunType)){
+  if(grepl("Categorical", currentRuntype)){
     categoricalRun = T
   }else{categoricalRun = F}
   
@@ -150,7 +150,7 @@ for(k in 1:length(runtypes)){
   saveRDS(combinedForeground, paste0(outputFolder, combineForegroundName, ".rds"))
  
   
-  typeSummary = processTimes(combinedTimes, currentRunType, categoricalRun)
+  typeSummary = processTimes(combinedTimes, currentRuntype, categoricalRun)
   summaries[[length(summaries)+1]] = typeSummary
   names(summaries)[length(summaries)] = currentRunType 
 }
