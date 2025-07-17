@@ -152,7 +152,7 @@ for(k in 1:length(runtypes)){
   
   typeSummary = processTimes(combinedTimes, currentRuntype, categoricalRun)
   summaries[[length(summaries)+1]] = typeSummary
-  names(summaries)[length(summaries)] = currentRunType 
+  names(summaries)[length(summaries)] = currentRuntype 
 }
 
 summariesDataframe = do.call(rbind, lapply(summaries, as.data.frame))
