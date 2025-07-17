@@ -17,19 +17,24 @@ for(k in 1:length(runtypes)){
   
   currentRuntype = runtypes[k]
   
+  message(k)
+  message(currentRuntype)
+  
   fileStarter = paste0(outputFolder, fileprefix, currentRuntype)
   combinedTimes = list()
   combinedForeground = list()
   
   
   for(i in instances){
+    message(i)
+    
     fileSuffix = paste0(i, ".rds")
     
     # -- Time File -- 
-    
+    message("Times")
     currentTimeFile = paste0(fileStarter, "TimesFile", fileSuffix)
     currentTime = readRDS(currentTimeFile)
-    if(i == 1){
+    if(i == 1 | if(is.null(combinedTimes))){
       for(j in 1:length(currentTime)){
         combinedTimes[[j]] = currentTime[[j]]
         
@@ -45,8 +50,8 @@ for(k in 1:length(runtypes)){
     # -- foreground File -- 
     currentForegroundFile = paste0(fileStarter, "ForegroundsFile", fileSuffix)
     currentForeground = readRDS(currentForegroundFile)
-    
-    if(i == 1){
+    message("Foreground")
+    if(i == 1 | is.null(combinedForeground)){
       for(j in 1:length(currentForeground)){
         combinedForeground[[j]] = currentForeground[[j]]
         
