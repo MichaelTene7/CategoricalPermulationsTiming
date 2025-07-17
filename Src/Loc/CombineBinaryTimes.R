@@ -129,7 +129,7 @@ for(k in 1:length(runtypes)){
       names(combinedForeground) = names(currentForeground)
     }else{
       for(j in 1:length(currentForeground)){
-        if(is.double(currentForeground[[j]]) | j=2){
+        if(is.double(currentForeground[[j]]) | j==2){
           combinedForeground[[j]] = rbind(combinedForeground[[j]], currentForeground[[j]])
         }
         combinedForeground[[j]] = append(combinedForeground[[j]], currentForeground[[j]])
