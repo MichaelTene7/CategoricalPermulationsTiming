@@ -156,9 +156,18 @@ for(k in 1:length(runtypes)){
   names(summaries)[length(summaries)] = currentRuntype 
   
   # -- make a foreground summary, add to list 
+  combineForegroundNameEdge = paste0(combineForegroundName, "Edges")
+  combineForegroundNameBinary = paste0(combineForegroundName, "Binary")
   
-  foregrounds[1][k] = combinedForeground[1]
-  foregrounds[2][k] = combinedForeground[2]
+  combinedEdgesList = list(combinedForeground[1])
+  combinedBinaryList = list(combinedForeground[2])
+
+  
+  
+  foregrounds[1][k] = combinedEdgesList
+  names(foregrounds[1])[k] = combineForegroundNameEdge
+  foregrounds[2][k] = combinedBinaryList
+  names(foregrounds[2])[k] = combineForegroundNameBinary
 }
 
 summariesDataframe = do.call(rbind, lapply(summaries, as.data.frame))
