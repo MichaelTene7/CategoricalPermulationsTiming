@@ -42,6 +42,7 @@ for(k in 1:length(runtypes)){
           combinedTimes[[j]] = NA
         }
       }
+      names(combinedTimes) = names(currentTime)
     }else{
       for(j in 1:length(currentTime)){
         combinedTimes[[j]] = append(combinedTimes[[j]], currentTime[[j]])
@@ -63,6 +64,7 @@ for(k in 1:length(runtypes)){
         }
         
       }
+      names(combinedForeground) = names(currentForeground)
     }else{
       for(j in 1:length(currentForeground)){
         combinedForeground[[j]] = append(combinedForeground[[j]], currentForeground[[j]])
