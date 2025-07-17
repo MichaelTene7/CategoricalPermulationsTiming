@@ -36,8 +36,11 @@ for(k in 1:length(runtypes)){
     currentTime = readRDS(currentTimeFile)
     if(i == 1 | is.null(combinedTimes)){
       for(j in 1:length(currentTime)){
-        combinedTimes[[j]] = currentTime[[j]]
-        
+        if(!is.null(currentTime[[j]])){
+          combinedTimes[[j]] = currentTime[[j]]
+        }else{
+          combinedTimes[[j]] = NA
+        }
       }
     }else{
       for(j in 1:length(currentTime)){
@@ -53,7 +56,11 @@ for(k in 1:length(runtypes)){
     message("Foreground")
     if(i == 1 | is.null(combinedForeground)){
       for(j in 1:length(currentForeground)){
-        combinedForeground[[j]] = currentForeground[[j]]
+        if(!is.null(currentForeground[[j]])){
+          currentForeground[[j]] = currentForeground[[j]]
+        }else{
+          currentForeground[[j]] = NA
+        }
         
       }
     }else{
