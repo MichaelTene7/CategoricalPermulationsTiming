@@ -13,7 +13,7 @@ relaxCombos = expand.grid(a = relaxLevels, b = relaxableTypes)
 runtypes = append(paste0(relaxCombos$b, relaxCombos$a), unrelaxableTypes)
 
 summaries = list()
-foregrounds = list(edgeList = list(), tipBinaries = list())
+foregrounds = list()
 processTimes = function(timeObject, runType = NA, totaled = F){
   
   simulationTime = mean(timeObject[[1]], na.rm = T)
@@ -156,18 +156,8 @@ for(k in 1:length(runtypes)){
   names(summaries)[length(summaries)] = currentRuntype 
   
   # -- make a foreground summary, add to list 
-  combineForegroundNameEdge = paste0(combineForegroundName, "Edges")
-  combineForegroundNameBinary = paste0(combineForegroundName, "Binary")
-  
-  combinedEdgesList = list(combinedForeground[1])
-  combinedBinaryList = list(combinedForeground[2])
-
-  
-  
-  foregrounds[1][k] = combinedEdgesList
-  #names(foregrounds[1])[k] = combineForegroundNameEdge
-  foregrounds[2][k] = combinedBinaryList
-  #names(foregrounds[2])[k] = combineForegroundNameBinary
+  foregrounds[[length(foregrounds)+1]] = typeSummary
+  names(foregrounds)[length(foregrounds)] = combinedForeground 
 }
 
 summariesDataframe = do.call(rbind, lapply(summaries, as.data.frame))
