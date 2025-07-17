@@ -157,8 +157,8 @@ for(k in 1:length(runtypes)){
   
   # -- make a foreground summary, add to list 
   
-  foregrounds[1][k] = currentCombinedForegrounds[1]
-  foregrounds[2][k] = currentCombinedForegrounds[2]
+  foregrounds[1][k] = combinedForeground[1]
+  foregrounds[2][k] = combinedForeground[2]
 }
 
 summariesDataframe = do.call(rbind, lapply(summaries, as.data.frame))
