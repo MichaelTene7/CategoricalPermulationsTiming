@@ -131,9 +131,9 @@ for(k in 1:length(runtypes)){
       for(j in 1:length(currentForeground)){
         if(is.double(currentForeground[[j]]) | j==2){
           combinedForeground[[j]] = cbind(combinedForeground[[j]], currentForeground[[j]])
-        }
+        }else{
         combinedForeground[[j]] = append(combinedForeground[[j]], currentForeground[[j]])
-        
+        }
       }
     }
   }
