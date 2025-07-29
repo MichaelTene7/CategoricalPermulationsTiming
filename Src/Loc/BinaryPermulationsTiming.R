@@ -210,9 +210,9 @@ if(file.exists(phenotypeVectorFilename)){
   phenotypeVector = readRDS(phenotypeVectorFilename)
 }else{
   if(file.exists(phenotypeVectorCategoricalFilename)){
-    message("Converting Categorical Phenotype Vector")
+    #message("Converting Categorical Phenotype Vector")
     phenotypeVector = readRDS(phenotypeVectorCategoricalFilename)
-    phenotypeVector = convertCategoricalToBinaryVector(phenotypeVector)
+    #phenotypeVector = convertCategoricalToBinaryVector(phenotypeVector)
   }else{
     if(!all(is.na(PathsObject))){
       message("Generating phenotype vector from paths")
