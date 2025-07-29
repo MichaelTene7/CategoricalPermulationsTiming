@@ -33,7 +33,7 @@ source("Src/Reu/ConvertCategoricalToBinaryVector.R")
 args = c('r=setupTest', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
 args = c('r=emilyPhen', 'm=Data/emilyMultiphylo.rds', 'v=F', 't=Lophuromys_woosnami_LSUMZ37793', 'n=2', 'l=0.05', 'c=T')
 args = c('r=CategoricalBinaryCarnivoreTree', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
-
+args = c('r=CategoricalBinaryCarnivoreTree', 'm=../RunRER/Data/zoonomiaAllMammalsTrees.rds', 't=vs_HLornAna3', 'n=2', 'i=test', 'c=F', 'e=F', 'l=c(0,0.05,0.1,0.2)')
 
 
 
@@ -79,7 +79,7 @@ mainTreesLocation = "../RunRERBinaryMT/Data/zoonomiaAllMammalsTrees.rds"  #this 
 permulationAmount = 100
 runInstanceValue = NULL
 useRelaxation = FALSE
-relaxationValue = NULL
+relaxationValue = 0
 PathsObject = NA
 rootSpeciesValue = "REFERENCE"
 speciesFilter = NULL
