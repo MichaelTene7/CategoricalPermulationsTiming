@@ -1,4 +1,5 @@
 #-------------------------------------------------------
+<<<<<<< HEAD
 # --- Check on paths ----
 #-------------------------------------------------------
 library(RERconverge)
@@ -12,6 +13,47 @@ speciesFilter = readRDS("Output/setupTest/setupTestSpeciesFilter.rds")
 setupTestPathsBinary = tree2Paths(categoricalTree, mainTrees, useSpecies = speciesFilter)
 saveRDS(setupTestPathsBinary, "Output/setupTest/setupTestPathsFile.rds")
 ?tree2Paths
+=======
+# --- convert categoricalPaths to binary paths ----
+#-------------------------------------------------------
+
+binaryPaths = readRDS("Output/emilyPhen/emilyPhenPathsFile.rds")
+categoricalPaths = readRDS("Output/CategoricalBinaryCarnivoreTree/CategoricalBinaryCarnivoreTreeCategoricalPathsFile.rds")
+speciesFilter = readRDS("Output/CategoricalBinaryCarnivoreTree/CategoricalBinaryCarnivoreTreeSpeciesFilter.rds")
+
+convertedPaths = categoricalPaths-1
+
+
+mainTrees = readRDS("../RunRER/data/zoonomiaAllMammalsTrees.rds")
+
+categoricalTree = readRDS("Output/CategoricalBinaryCarnivoreTree/CategoricalBinaryCarnivoreTreeCategoricalTree.rds")
+categoricalTree$edge.length = categoricalTree$edge.length -1
+
+binarizedPaths = tree2Paths(categoricalTree, mainTrees, binarize = T, speciesFilter)
+
+which(!convertedPaths == binarizedPaths)
+
+
+saveRDS(convertedPaths, "Output/CategoricalBinaryCarnivoreTree/CategoricalBinaryCarnivoreTreePathsFile.rds")
+
+convertedPaths[6]
+binarizedPaths[6]
+
+?tree2Paths
+which(is.na(binaryPaths))
+
+
+testPaths = readRDS("../RunRER/Output/Old/CVHRemake/CVHRemakePathsFile.rds")
+categoricalPhenotypevector = readRDS("Output/CategoricalBinaryCarnivoreTree/CategoricalBinaryCarnivoreTreeCategoricalPhenotypeVector.rds")
+
+#-------------------------------------------------------
+# --- convert combined files to csv ----
+#-------------------------------------------------------
+
+combinedTiming = readRDS("Output/emilyPhen/emilyPhenCombinedTimingSummaries.rds")
+write.csv(combinedTiming, "Output/emilyPhen/emilyPhenCombinedTimingSummaries.csv")
+
+>>>>>>> a4368aa484ce59ad83ff83a1158c5bd029ba7693
 #-------------------------------------------------------
 # --- analyze combined data ----
 #-------------------------------------------------------

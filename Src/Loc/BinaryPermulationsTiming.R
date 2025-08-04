@@ -27,10 +27,13 @@ source("Src/Reu/convertPathsToPhenVector.R")
 source("Src/Reu/convertBinaryToCategoricalCorrelationsFormat.R")
 source("Src/Reu/scriptsForTestingPermulationFunctions/neededPermulationFunctions.r")
 source("Src/Reu/RERConvergeFunctions.R")
+source("Src/Reu/ConvertCategoricalToBinaryVector.R")
+
 
 args = c('r=setupTest', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
 args = c('r=emilyPhen', 'm=Data/emilyMultiphylo.rds', 'v=F', 't=Lophuromys_woosnami_LSUMZ37793', 'n=2', 'l=0.05', 'c=T')
-
+args = c('r=CategoricalBinaryCarnivoreTree', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
+args = c('r=CategoricalBinaryCarnivoreTree', 'm=../RunRER/Data/zoonomiaAllMammalsTrees.rds', 't=vs_HLornAna3', 'n=2', 'i=test', 'c=F', 'e=F', 'l=c(0,0.05,0.1,0.2)')
 
 
 
@@ -76,7 +79,7 @@ mainTreesLocation = "../RunRERBinaryMT/Data/zoonomiaAllMammalsTrees.rds"  #this 
 permulationAmount = 100
 runInstanceValue = NULL
 useRelaxation = FALSE
-relaxationValue = NULL
+relaxationValue = 0
 PathsObject = NA
 rootSpeciesValue = "REFERENCE"
 speciesFilter = NULL
@@ -182,28 +185,47 @@ if(all(is.null(speciesFilter))){ # If the species filter is meant to be empty, t
 
 #PathsFile
 PathsFileFilename = paste(outputFolderName, filePrefix, "PathsFile.rds", sep="")
+PathsCategoricalFileFilename = paste(outputFolderName, filePrefix, "CategoricalPathsFile.rds", sep="")
 if(file.exists(PathsFileFilename)){
   PathsObject = readRDS(PathsFileFilename)
 }else{
-  if(runEmily){
-    stop("THIS IS AN ISSUE MESSAGE, GENERATE A PATHSFILE")  
+  if(file.exists(PathsCategoricalFileFilename)){
+    message("Converting categorical Path")
+    PathsObject = readRDS(PathsCategoricalFileFilename)
+    PathsObject = PathsObject-1
   }else{
-    message("No Paths found, not running emily, not required.")
+    if(runEmily){
+      stop("THIS IS AN ISSUE MESSAGE, GENERATE A PATHSFILE")  
+    }else{
+      message("No Paths found, not running emily, not required.")
+    } 
   }
+  
 }
 
 #phenotypeVector
 phenotypeVectorFilename = paste(outputFolderName, filePrefix, "PhenotypeVector.rds", sep="")
+phenotypeVectorCategoricalFilename = paste(outputFolderName, filePrefix, "CategoricalPhenotypeVector.rds", sep="")
 if(file.exists(phenotypeVectorFilename)){
   phenotypeVector = readRDS(phenotypeVectorFilename)
 }else{
-  if(!all(is.na(PathsObject))){
-    message("Generating phenotype vector from paths")
-    phenotypeVector = convertPathsToPhenVector(PathsObject)
-    phenotypeVector= phenotypeVector[which(names(phenotypeVector) %in% mainTrees$masterTree$tip.label)]
+  if(file.exists(phenotypeVectorCategoricalFilename)){
+    #message("Converting Categorical Phenotype Vector")
+    phenotypeVector = readRDS(phenotypeVectorCategoricalFilename)
+    #phenotypeVector = convertCategoricalToBinaryVector(phenotypeVector)
   }else{
-    stop("THIS IS AN ISSUE MESSAGE, GENERATE A PHENTOTYPEVECTOR")
+    if(!all(is.na(PathsObject))){
+      message("Generating phenotype vector from paths")
+      phenotypeVector = convertPathsToPhenVector(PathsObject)
+      if(phenotypeVector == 0){
+        stop("Paths file does not include names, provide a phenotype Vector")
+      }
+      phenotypeVector= phenotypeVector[which(names(phenotypeVector) %in% mainTrees$masterTree$tip.label)]
+    }else{
+      stop("THIS IS AN ISSUE MESSAGE, GENERATE A PHENTOTYPEVECTOR")
+    }    
   }
+
 }
 phenotypeVector = convertForegroundVector(phenotypeVector)
 
