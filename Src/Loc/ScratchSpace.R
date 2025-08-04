@@ -1,4 +1,18 @@
 #-------------------------------------------------------
+# --- Check on paths ----
+#-------------------------------------------------------
+library(RERconverge)
+emilyPaths = readRDS("Output/emilyPhen/emilyPhenPathsFile.rds")
+setupTestPaths = readRDS("Output/setupTest/setupTestPathsFile.rds")
+
+categoricalTree = readRDS("Output/setupTest/setupTestCategoricalTree.rds")
+mainTrees = readRDS("../RunRERBinaryMT/data/zoonomiaAllMammalsTrees.rds")
+speciesFilter = readRDS("Output/setupTest/setupTestSpeciesFilter.rds")
+
+setupTestPathsBinary = tree2Paths(categoricalTree, mainTrees, useSpecies = speciesFilter)
+saveRDS(setupTestPathsBinary, "Output/setupTest/setupTestPathsFile.rds")
+?tree2Paths
+#-------------------------------------------------------
 # --- analyze combined data ----
 #-------------------------------------------------------
 
