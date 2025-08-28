@@ -88,7 +88,7 @@ runDaniel = T
 runFudged = T
 runCategorical = T
 runEmily = T
-runNewscript = T 
+runNewScript = T 
 
 
 #Settings without an arugment but centralized here 
@@ -163,7 +163,7 @@ if(!is.na(cmdArgImport('e'))){
 
 #Run newScript
 if(!is.na(cmdArgImport('x'))){
-  runNewscript = cmdArgImport('x')
+  runNewScript = cmdArgImport('x')
 }else{
   message("default, running newScript")
 }
