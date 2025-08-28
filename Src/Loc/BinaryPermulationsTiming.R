@@ -161,7 +161,7 @@ if(!is.na(cmdArgImport('e'))){
   message("default, running emily")
 }
 
-#Run emily
+#Run newScript
 if(!is.na(cmdArgImport('x'))){
   runNewscript = cmdArgImport('x')
 }else{
