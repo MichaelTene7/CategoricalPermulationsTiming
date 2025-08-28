@@ -5,7 +5,7 @@
 fileprefix = "emilyPhen"
 outputFolder = paste0("Output/", fileprefix, "/")
 relaxableTypes = c("Fudged", "Categorical")
-unrelaxableTypes = c("EmilyMidpoint", "EmilyNoMidpoint", "Daniel")
+unrelaxableTypes = c("EmilyMidpoint", "EmilyNoMidpoint", "Daniel", "newScript")
 relaxLevels = c("0-", "0.05-", "0.1-", "0.2-")
 instances = 1:100
 
