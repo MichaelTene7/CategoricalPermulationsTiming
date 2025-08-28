@@ -28,6 +28,7 @@ source("Src/Reu/convertBinaryToCategoricalCorrelationsFormat.R")
 source("Src/Reu/scriptsForTestingPermulationFunctions/neededPermulationFunctions.r")
 source("Src/Reu/RERConvergeFunctions.R")
 source("Src/Reu/ConvertCategoricalToBinaryVector.R")
+source("Src/Reu/simBinPhenoSSM_fromMasterTree_matchNumFgTips.r")
 
 
 args = c('r=setupTest', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
@@ -87,6 +88,7 @@ runDaniel = T
 runFudged = T
 runCategorical = T
 runEmily = T
+runNewscript = T 
 
 
 #Settings without an arugment but centralized here 
@@ -157,6 +159,13 @@ if(!is.na(cmdArgImport('e'))){
   runEmily = cmdArgImport('e')
 }else{
   message("default, running emily")
+}
+
+#Run emily
+if(!is.na(cmdArgImport('x'))){
+  runNewscript = cmdArgImport('x')
+}else{
+  message("default, running newScript")
 }
 
 #-------------------------
@@ -465,11 +474,13 @@ timeListNameSet = c("SimulationTimes", "PathTimes", "CorrelationTimes", "Permula
   # --- Emily ----
   
   
-  emilySinglePermulation = function(message = F, useMidpoint = T){
+  emilySinglePermulation = function(message = F, useMidpoint = T, useNew = T){
     if(message){cat("Simulating Phenotype \n")}
     simulationTime = suppressWarnings(
       system.time({
-        if(useMidpoint){
+        if(useNew){
+          permulatedTree = simBinPhenoSSM_fromMasterTree_matchNumFgTips(tree=masterTree, trees=mainTrees, fg_vec=foregroundSpecies, pathvec=PathsObject)
+        }else if(useMidpoint){
           permulatedTree = simBinPhenoSSM_fromMasterTree(tree=masterTree, trees=mainTrees, fg_vec=foregroundSpecies, pathvec=PathsObject)
         }else{
           permulatedTree = simBinPhenoSSM_fromMasterTree_noMidpointRoot(tree=masterTree, trees=mainTrees, fg_vec=foregroundSpecies, pathvec=PathsObject)
@@ -730,9 +741,46 @@ if(runDaniel){
 # if(runDaniel){danielTimes = functionTimer("danielPermulation", permulationAmount, message = T)}
 
 
+#-------------------------
+#-- New Binary Permulation Script  ---
+#-------------------------
 
 
+#-------------------------
+#-- Emily Permulations ---
+#-------------------------
 
+#create Timing storage objects
+newScriptSimulationTimes = NULL
+newScriptPathTimes = NULL
+newScriptCorrelationTimes = NULL
+newScriptPValueTime = NULL
+
+newScriptForegroundStorage = makeForegroundSpeciesStorage("newScript")
+
+foregroundSpecies = names(phenotypeVector)[phenotypeVector == 1]
+
+if(runNewScript){
+  newScriptSimulationTimes = NULL
+  newScriptPathTimes = NULL
+  newScriptCorrelationTimes = NULL
+  newScriptPValueTime = NULL
+  cat("----------------- \n Newscript Analysis \n ----------- \n")
+  
+  newScriptResults = emilyPermulationPipeline(permulationAmount,T)
+  
+  newScriptTimes = list(newScriptSimulationTimes, newScriptPathTimes, newScriptCorrelationTimes, permulationAmount, newScriptPValueTime)
+  names(newScriptTimes) = paste0("newScript", timeListNameSet)
+  newScriptTimesFilename = paste(outputFolderName, filePrefix, "newScriptimesFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(newScriptTimes, newScriptTimesFilename)
+  
+  newScriptForegroundsFilename = paste(outputFolderName, filePrefix, "newScriptForegroundsFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(newScriptForegroundStorage, newScriptForegroundsFilename)
+  
+  newScriptResultsFilename = paste(outputFolderName, filePrefix, "newScriptResultsFile", runInstanceValue, ".rds", sep= "")
+  saveRDS(newScriptResults, newScriptResultsFilename)
+ 
+}
 
 
 
