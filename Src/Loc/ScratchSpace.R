@@ -1,4 +1,5 @@
 #-------------------------------------------------------
+<<<<<<< HEAD
 # --- debug paths issues  ----
 #-------------------------------------------------------
 fgdspecs= foregroundSpecies
@@ -13,6 +14,23 @@ phenvec = phenotypeVector
 foregroundStorage = fudgedTempForegroundStorage
 
 #-------------------------------------------------------
+=======
+<<<<<<< HEAD
+# --- Check on paths ----
+#-------------------------------------------------------
+library(RERconverge)
+emilyPaths = readRDS("Output/emilyPhen/emilyPhenPathsFile.rds")
+setupTestPaths = readRDS("Output/setupTest/setupTestPathsFile.rds")
+
+categoricalTree = readRDS("Output/setupTest/setupTestCategoricalTree.rds")
+mainTrees = readRDS("../RunRERBinaryMT/data/zoonomiaAllMammalsTrees.rds")
+speciesFilter = readRDS("Output/setupTest/setupTestSpeciesFilter.rds")
+
+setupTestPathsBinary = tree2Paths(categoricalTree, mainTrees, useSpecies = speciesFilter)
+saveRDS(setupTestPathsBinary, "Output/setupTest/setupTestPathsFile.rds")
+?tree2Paths
+=======
+>>>>>>> 05aa70782fd7da51ce7046da0a0bd5e46bacc381
 # --- convert categoricalPaths to binary paths ----
 #-------------------------------------------------------
 
@@ -54,6 +72,7 @@ categoricalPhenotypevector = readRDS("Output/CategoricalBinaryCarnivoreTree/Cate
 combinedTiming = readRDS("Output/emilyPhen/emilyPhenCombinedTimingSummaries.rds")
 write.csv(combinedTiming, "Output/emilyPhen/emilyPhenCombinedTimingSummaries.csv")
 
+>>>>>>> a4368aa484ce59ad83ff83a1158c5bd029ba7693
 #-------------------------------------------------------
 # --- analyze combined data ----
 #-------------------------------------------------------
