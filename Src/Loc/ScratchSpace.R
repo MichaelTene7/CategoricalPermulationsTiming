@@ -1,4 +1,18 @@
 #-------------------------------------------------------
+# --- debug paths issues  ----
+#-------------------------------------------------------
+fgdspecs= foregroundSpecies
+RERs = RERObject
+trees = mainTrees
+useSpecies = speciesFilter
+ntrees = permulationAmount
+root = rootNode
+fudge = fudgeNumber
+cors = CorrelationObject
+phenvec = phenotypeVector
+foregroundStorage = fudgedTempForegroundStorage
+
+#-------------------------------------------------------
 # --- convert categoricalPaths to binary paths ----
 #-------------------------------------------------------
 
@@ -30,6 +44,8 @@ which(is.na(binaryPaths))
 
 testPaths = readRDS("../RunRER/Output/Old/CVHRemake/CVHRemakePathsFile.rds")
 categoricalPhenotypevector = readRDS("Output/CategoricalBinaryCarnivoreTree/CategoricalBinaryCarnivoreTreeCategoricalPhenotypeVector.rds")
+
+
 
 #-------------------------------------------------------
 # --- convert combined files to csv ----
