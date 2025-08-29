@@ -1,4 +1,9 @@
 #This script is being used to time-trial multiple methods of binary permulations on similar datasets. 
+
+
+# ---
+# IF RUNNING LOCALLY MAKE SURE TO USE clusterRun EQUALS FALSE!!!
+# ---
 clusterRun = F
 clusterRun = T
 if(clusterRun){.libPaths("/share/ceph/wym219group/shared/libraries/R4")} #add path to custom libraries to searched locations
@@ -9,8 +14,12 @@ if(clusterRun){.libPaths("/share/ceph/wym219group/shared/libraries/R4")} #add pa
 # n = numberOfPermulations            This is the number of permulations to run in the script 
 # i = runInstanceValue                This is used to generate unique filenames for each instance of the script. Used in parrallelization. 
 # l = relaxationValue <int, 0-1>      This is a value between 0 and 1, the percentage off of exact a permulation is allowed to be. Increases runspeed, but reduces permulation accuracy. Recommend 0.1 if more than 3 categories
-# t=rootSpeciesName                    This is the name of the root species, if not using REFERENCE(human)
-
+# t = rootSpeciesName                 This is the name of the root species, if not using REFERENCE(human)
+# d = runDaniel <T or F>              This determines if the daniel permulations method is run 
+# f = runFudged <T or F>              This determines if the fudged permulations method is run 
+# c = runCategorical <T or F>         This determines if the categorical permulations method is run 
+# e = runEmily <T or F>               This determines if the emily permulations method is run 
+# x = runNewScipt <T or F>            This determines if the emily's-new-script permulations method is run 
 
 library(RERconverge)
 library(tools)
@@ -32,10 +41,14 @@ source("Src/Reu/simBinPhenoSSM_fromMasterTree_matchNumFgTips.r")
 
 
 args = c('r=setupTest', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
+args = c('r=CategoricalBinaryCarnivoreTree', 'm=../RunRER/Data/zoonomiaAllMammalsTrees.rds', 't=vs_HLornAna3', 'n=2', 'i=test', 'c=F', 'e=F', 'l=c(0,0.05,0.1,0.2)')
+args = c('r=CategoricalBinaryCarnivoreTree', 'm=../RunRERBinaryMT/Data/zoonomiaAllMammalsTrees.rds', 't=vs_HLornAna3', 'n=2', 'i=test', 'c=F', 'e=F', 'l=c(0,0.05,0.1,0.2)')
+
+#-- 
+# Emily, use these two arg sets 
+#-- 
 args = c('r=emilyPhen', 'm=Data/emilyMultiphylo.rds', 'v=F', 't=Lophuromys_woosnami_LSUMZ37793', 'n=2', 'l=0.05', 'c=T')
 args = c('r=CategoricalBinaryCarnivoreTree', 'm=../RunRER/data/zoonomiaAllMammalsTrees.rds', 'v=F', 't=vs_HLornAna3', 'n=5', 'l=0.05')
-args = c('r=CategoricalBinaryCarnivoreTree', 'm=../RunRER/Data/zoonomiaAllMammalsTrees.rds', 't=vs_HLornAna3', 'n=2', 'i=test', 'c=F', 'e=F', 'l=c(0,0.05,0.1,0.2)')
-
 
 
 
@@ -226,7 +239,7 @@ if(file.exists(phenotypeVectorFilename)){
     if(!all(is.na(PathsObject))){
       message("Generating phenotype vector from paths")
       phenotypeVector = convertPathsToPhenVector(PathsObject)
-      if(phenotypeVector == 0){
+      if(all(phenotypeVector == 0)){
         stop("Paths file does not include names, provide a phenotype Vector")
       }
       phenotypeVector= phenotypeVector[which(names(phenotypeVector) %in% mainTrees$masterTree$tip.label)]
@@ -468,13 +481,19 @@ timeListNameSet = c("SimulationTimes", "PathTimes", "CorrelationTimes", "Permula
     
   }
   
-  
-  
+  length(permulatedTree)
+  i = 1
+  while(length(permulatedTree) ==1){
+    permulatedTree = simBinPhenoSSM_fromMasterTree(tree=masterTree, trees=mainTrees, fg_vec=foregroundSpecies, pathvec=PathsObject)
+    message(i)
+    print(i)
+    i = i+1
+  }
   
   # --- Emily ----
   
   
-  emilySinglePermulation = function(message = F, useMidpoint = T, useNew = T){
+  emilySinglePermulation = function(message = F, useMidpoint = F, useNew = T){
     if(message){cat("Simulating Phenotype \n")}
     simulationTime = suppressWarnings(
       system.time({
